@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.3
+// @version     1.0.4
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -60,19 +60,27 @@ var followButtons = [];
 var followerListRoot = null;
 var finishedElems = [];
 
+window.onload = function() {
+  const body = document.querySelector('body');
+  const observer = new MutationObserver(function(mutations) {
+    if (lastLocation != document.location.href) {
+      lastLocation = document.location.href;
+      followButtons = [];
+      followerListRoot = null;
+      finishedElems = [];
+    }
+  });
+
+  observer.observe(body, {
+    childList: true,
+    subtree: true,
+  });
+};
+
 setTimeout(scanUsers, PROCESS_INTERVAL_MS);
 
 function scanUsers() {
-  const currLocation = window.location.href;
-  if (currLocation != lastLocation) {
-    // ページ遷移したらリセット
-    followButtons = [];
-    followerListRoot = null;
-    finishedElems = [];
-    lastLocation = currLocation;
-  }
-
-  if (currLocation.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*followers/)) {
+  if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*followers/)) {
     // フォロワー一覧でのみ処理を実行する
     scanUsersInner();
     setTimeout(scanUsers, PROCESS_INTERVAL_MS);
