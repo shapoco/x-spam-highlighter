@@ -6,7 +6,7 @@
 
 ## インストール方法
 
-1. Chrome または Firefox に Violentmonkey をインストールします。
+1. Chrome または Firefox に [Violentmonkey](https://violentmonkey.github.io/) をインストールします。
 2. [こちらのリンク](https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
 
 ## 動かない場合
