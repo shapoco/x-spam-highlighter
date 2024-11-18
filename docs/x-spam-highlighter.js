@@ -7,6 +7,7 @@
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
+// @homepageURL https://github.com/shapoco/x-spam-highlighter/
 // @updateURL   https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.js
 // @downloadURL https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.js
 // ==/UserScript==
