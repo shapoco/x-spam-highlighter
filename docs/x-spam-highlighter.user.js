@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.6
+// @version     1.0.7
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -26,12 +26,13 @@ const rules = [
   { regexes:[/お迎え行きます/g], penalty:20},
   { regexes:[/\bLINE\b/g], penalty:20},
   { regexes:[/セフレ/g], penalty:20},
+  { regexes:[/(パパ|ママ)活/g], penalty:20},
   { regexes:[/(大人|オトナ)の関係?/g], penalty:20},
   { regexes:[/不倫/g], penalty:20},
   { regexes:[/\b[1-3]\d+[歳才↑↓]/g, /\b1[5-8]\d+(cm|│)/g], penalty:20},
   { regexes:[/オナニー|自慰/g], penalty:20},
   { regexes:[/まんこ|クリ(トリス|派)|アナル|ペニス|ちんちん|ちんこ/g], penalty:20},
-  { regexes:[/セックス|夜の営み/g], penalty:20},
+  { regexes:[/セックス|\bsex\b|夜の営み/g], penalty:20},
   { regexes:[/快楽/g], penalty:20},
   { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]|スケベ/g], penalty:10},
   { regexes:[/噛まれたい/g], penalty:10},
@@ -42,23 +43,31 @@ const rules = [
   { regexes:[/フォロバ/g, /100[%％]?/g], penalty:10},
   { regexes:[/出会(い|える)?/g], penalty:10},
   { regexes:[/サロン/g], penalty:10},
-  { regexes:[/セミナー|講座/g], penalty:10},
+  { regexes:[/セミナー|講座|塾/g], penalty:10},
   { regexes:[/(裏|ウラ)(垢|アカ)/g], penalty:10},
   { regexes:[/過激な?/g], penalty:10},
   { regexes:[/フェチ/g], penalty:10},
+  { regexes:[/抽選/g], penalty:10},
   { regexes:[/当選/g], penalty:10},
+  { regexes:[/稼(げ[るば]|ぐ|い[だで])/g], penalty:10},
+  { regexes:[/儲(か(る|り|った)|け[たて]?)/g], penalty:10},
+  { regexes:[/売り?上げ?|収益|利益/g], penalty:10},
   { regexes:[/ライン/g], penalty:5},
   { regexes:[/\bDM\b|チャット|トーク|通話|メッセ|ﾒｯｾ/g], penalty:5},
   { regexes:[/投資/g], penalty:5},
+  { regexes:[/バイナリー/g], penalty:5},
+  { regexes:[/仮想通貨/g], penalty:5},
   { regexes:[/為替|\bFX\b/g], penalty:5},
   { regexes:[/資産運用/g], penalty:5},
   { regexes:[/達成/g], penalty:5},
-  { regexes:[/社長|\bOL\b|看護(師|学生)|人妻/g], penalty:5},
+  { regexes:[/社長|コンサル(タント)?|\bOL\b|看護(師|学生)|人妻/g], penalty:5},
   { regexes:[/[男女]子/g], penalty:5},
   { regexes:[/アラ(サー|フォー|フィフ)/g], penalty:5},
-  { regexes:[/地方出身/g], penalty:5},
+  { regexes:[/出身/g], penalty:5},
   { regexes:[/募集/g], penalty:5},
   { regexes:[/フォローして|フォロリツ/g], penalty:5},
+  { regexes:[/貧乏|底辺|低賃金/g], penalty:5},
+  { regexes:[/レクチャー|お教えします/g], penalty:5},
 ].map(rule => {
   rule.regexes = rule.regexes.map(regex => {
     const tmp = regex.toString();
