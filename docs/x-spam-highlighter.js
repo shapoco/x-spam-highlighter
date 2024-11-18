@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name        X Spam Highlighter
 // @namespace   https://shapoco.github.io/x-spam-highlighter/
-// @match       https://x.com/*/*followers*
+// @match       https://x.com/*
 // @grant       none
-// @version     1.0.0
+// @version     1.0.1
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://shapoco.github.io/x-spam-highlighter/
@@ -14,14 +14,7 @@
 const PROCESS_INTERVAL_MS = 300;
 const KEYWORD_BACKGROUND_COLOR = 'rgba(255, 255, 0, 0.25)';
 
-setTimeout(scanUsers, PROCESS_INTERVAL_MS);
-
 const followButtonDataIdRegex = /(\d+)-(un)?(follow|block)/;
-
-var knownUserIds = {};
-var followButtons = [];
-var followerListRoot = null;
-var finishedElems = [];
 
 // 評価ルール
 const rules = [
@@ -61,9 +54,31 @@ const searchObstCharRegexStr = (function(){
   return tmp.substring(1, tmp.length - 2);
 })();
 
+var lastLocation = null;
+var followButtons = [];
+var followerListRoot = null;
+var finishedElems = [];
+
+setTimeout(scanUsers, PROCESS_INTERVAL_MS);
+
 function scanUsers() {
-  scanUsersInner();
-  setTimeout(scanUsers, PROCESS_INTERVAL_MS);
+  const currLocation = window.location.href;
+  if (currLocation != lastLocation) {
+    // ページ遷移したらリセット
+    followButtons = [];
+    followerListRoot = null;
+    finishedElems = [];
+    lastLocation = currLocation;
+  }
+
+  if (currLocation.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*followers/)) {
+    // フォロワー一覧でのみ処理を実行する
+    scanUsersInner();
+    setTimeout(scanUsers, PROCESS_INTERVAL_MS);
+  }
+  else {
+    setTimeout(scanUsers, 1000);
+  }
 }
 
 function scanUsersInner() {
@@ -90,13 +105,10 @@ function scanUsersInner() {
 function isFollowButton(btn) {
   // フォローボタンでないものは除外
   if (!btn.dataset.testid) return false;
-  const m = btn.dataset.testid.match(followButtonDataIdRegex);
-  if (!m) return false;
+  if (!btn.dataset.testid.match(followButtonDataIdRegex)) return false;
 
-  // 既知の UserID は除外
-  const userId = m[1];
-  if (userId in knownUserIds) return false;
-  knownUserIds[userId] = true;
+  // 既知のボタンは除外
+  if (btn in followButtons) return false;
 
   // ビューポートの端にある要素は除外
   const vw = window.innerWidth;
