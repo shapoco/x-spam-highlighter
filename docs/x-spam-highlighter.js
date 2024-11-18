@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name        X Spam Highlighter
-// @namespace   https://shapoco.github.io/x-spam-highlighter/
+// @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.1
+// @version     1.0.2
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
-// @supportURL  https://shapoco.github.io/x-spam-highlighter/
+// @supportURL  https://github.com/shapoco/x-spam-highlighter/
 // @updateURL   https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.js
 // @downloadURL https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.js
 // ==/UserScript==
