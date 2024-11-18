@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.7
+// @version     1.0.8
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -24,7 +24,6 @@ const rules = [
   { regexes:[/貧乏|底辺/g, /成り上がり/g], penalty:50},
   { regexes:[/気にな((って)?る|っちゃう)([男女]性|お(兄|に[いぃ]|姉|ね[えぇ])さん)/g], penalty:50},
   { regexes:[/お迎え行きます/g], penalty:20},
-  { regexes:[/\bLINE\b/g], penalty:20},
   { regexes:[/セフレ/g], penalty:20},
   { regexes:[/(パパ|ママ)活/g], penalty:20},
   { regexes:[/(大人|オトナ)の関係?/g], penalty:20},
@@ -35,6 +34,7 @@ const rules = [
   { regexes:[/セックス|\bsex\b|夜の営み/g], penalty:20},
   { regexes:[/快楽/g], penalty:20},
   { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]|スケベ/g], penalty:10},
+  { regexes:[/\bLINE\b/g], penalty:10},
   { regexes:[/噛まれたい/g], penalty:10},
   { regexes:[/ヤリたい/g], penalty:10},
   { regexes:[/役に[立た]ちた(い|くて)/g], penalty:10},
