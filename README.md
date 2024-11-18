@@ -8,3 +8,7 @@
 
 1. Chrome または Firefox に Violentmonkey をインストールします。
 2. [こちらのリンク](https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
+
+## 動かない場合
+
+ページをリロードしてみてください。
