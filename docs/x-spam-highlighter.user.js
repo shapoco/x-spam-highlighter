@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.8
+// @version     1.0.9
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -40,7 +40,7 @@ const rules = [
   { regexes:[/役に[立た]ちた(い|くて)/g], penalty:10},
   { regexes:[/\bFIRE\b/g], penalty:10},
   { regexes:[/[見み]せ[合あ]い|[見み]せ([合あ]い)?っこ/g], penalty:10},
-  { regexes:[/フォロバ/g, /100[%％]?/g], penalty:10},
+  { regexes:[/フォロバ/g, /(💯|100)[%％]?/g], penalty:10},
   { regexes:[/出会(い|える)?/g], penalty:10},
   { regexes:[/サロン/g], penalty:10},
   { regexes:[/セミナー|講座|塾/g], penalty:10},
@@ -177,7 +177,7 @@ function processUser(elm) {
   if (finishedElems.includes(elm)) return;
   finishedElems.push(elm);
 
-  const text = normalizeForHitTest(elm.textContent);
+  const text = normalizeForHitTest(getTextContentWithAlt(elm));
 
   // 評価
   var wordsToBeHighlighted = [];
@@ -224,7 +224,7 @@ function processUser(elm) {
 function highlightKeyword(elm, kwd) {
   const children = Array.from(elm.childNodes);
   children.forEach(child => {
-    if (child instanceof Text) {
+    if (child.nodeType == Node.TEXT_NODE) {
       // テキスト要素
       const childText = child.nodeValue;
       if (normalizeForHitTest(childText).includes(kwd)) {
@@ -293,5 +293,27 @@ function toNarrow(orig) {
   const ret = orig.replaceAll(/[Ａ-Ｚａ-ｚ０-９]/g, m => String.fromCharCode(m.charCodeAt(0) - 0xFEE0));
   console.assert(orig.length == ret.length);
   return ret;
+}
+
+// 画像 (emoji) の alt を含む textContent
+function getTextContentWithAlt(elm) {
+  if (elm) {
+    if (elm.nodeType === Node.TEXT_NODE) {
+      return elm.nodeValue;
+    }
+    else if (elm.nodeType === Node.ELEMENT_NODE) {
+      if (elm.tagName.toLowerCase() === 'img') {
+        return elm.alt;
+      }
+      else {
+        let text = '';
+        for (let child of elm.childNodes) {
+          text += getTextContentWithAlt(child);
+        }
+        return text;
+      }
+    }
+  }
+  return '';
 }
 
