@@ -24,7 +24,12 @@ PC 版 X のフォロワー覧でスパムの可能性があるアカウント�
 
 ## 判定基準
 
-NG ワードベースで雑に判定しています。詳細はスクリプトのソースをご覧下さい。
+NG ワードベースで以下のようなスパムアカウントを雑に判定しています。詳細は[スクリプトのソース](./docs/x-spam-highlighter.user.js)をご覧下さい。
+
+- 金配り系
+- 投資系
+- エロ系
+- 出会い系
 
 NG ワードの追加依頼があれば [X でリプライ](https://twitter.com/shapoco/status/1858550973104529823) または [Issue](https://github.com/shapoco/x-spam-highlighter/issues) を起票ください。
 
