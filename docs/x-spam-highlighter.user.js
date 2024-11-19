@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.12
+// @version     1.0.13
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -25,8 +25,8 @@ const REGEX_BUST = /\b[A-Z](カップ|cup)/g;
 const rules = [
 //{ regexes:[/あ/g], penalty:100}, // テスト用
   { regexes:[/お金|現金|\d*万円/g, /配布|配り|配る|配っ[てた]?|プレゼント|分配/g], penalty:50},
-  { regexes:[/びんぼう|貧乏|貧困|底辺/g, /成り上がり/g], penalty:50},
-  { regexes:[/(気にな((って)?る|っちゃう)|興味の?ある|ちょっと好き)([男女]性|お(兄|に[いぃ]|姉|ね[えぇ])さん)/g], penalty:50},
+  { regexes:[/びんぼう|貧乏|貧困|底辺/g, /成り?上が?り/g], penalty:50},
+  { regexes:[/(気にな((って)?る|っちゃう)|興味の?ある|ちょっと好きな?)([男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん)/g], penalty:50},
   { regexes:[/お迎え行きます/g], penalty:20},
   { regexes:[/セフレ/g], penalty:20},
   { regexes:[/(パパ|ママ)活/g], penalty:20},
@@ -43,11 +43,12 @@ const rules = [
   { regexes:[/放尿/g], penalty:20},
   { regexes:[/首[締絞]め/g], penalty:20},
   { regexes:[/騎乗位/g], penalty:20},
-  { regexes:[/快楽/g], penalty:20},
   { regexes:[/エロテロリスト/g], penalty:20},
+  { regexes:[/快楽/g], penalty:10},
+  { regexes:[/性欲|せ[ーい]よく/g], penalty:20},
   { regexes:[/痴漢/g], penalty:10},
   { regexes:[/line\.me/g], penalty:10},
-  { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]|スケベ/g], penalty:10},
+  { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]?|えちえち|スケベ/g], penalty:10},
   { regexes:[/\b[\d,]+万円/g], penalty:10},
   { regexes:[/\b[\d,]+億円?/g], penalty:10},
   { regexes:[/社を?経営/g], penalty:10},
@@ -101,6 +102,7 @@ const rules = [
   { regexes:[/デート/g], penalty:5},
   { regexes:[/条件が?合えば/g], penalty:5},
   { regexes:[/(友達|友だち|ともだち)になって/g], penalty:5},
+  { regexes:[/絡みに行く/g], penalty:5},
   { regexes:[/フォローして|フォロリツ|絡んで|こっち[来き]て/g], penalty:5},
   { regexes:[/貧乏|底辺|低賃金/g], penalty:5},
   { regexes:[/口座/g], penalty:5},
