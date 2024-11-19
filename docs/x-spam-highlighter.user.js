@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.10
+// @version     1.0.11
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -17,27 +17,39 @@ const KEYWORD_BACKGROUND_COLOR = 'rgba(255, 255, 0, 0.25)';
 
 const followButtonDataIdRegex = /(\d+)-(un)?(follow|block)/;
 
+const REGEX_AGE = /\b[1-3]\d+(歳|才|さい|↑|↓)|アラ(サー|フォー|フィフ)/g;
+const REGEX_LENGTH = /\b1[3-8]\d+(cm|センチ|│)/g;
+const REGEX_BUST_SIZE = /\b[A-Z](カップ|cup)/g;
+
 // 評価ルール
 const rules = [
 //{ regexes:[/あ/g], penalty:100}, // テスト用
   { regexes:[/お金|現金|\d*万円/g, /配布|配り|配る|配っ[てた]?|プレゼント|分配/g], penalty:50},
-  { regexes:[/貧乏|底辺/g, /成り上がり/g], penalty:50},
-  { regexes:[/気にな((って)?る|っちゃう)([男女]性|お(兄|に[いぃ]|姉|ね[えぇ])さん)/g], penalty:50},
+  { regexes:[/びんぼう|貧乏|底辺/g, /成り上がり/g], penalty:50},
+  { regexes:[/(気にな((って)?る|っちゃう)|興味の?ある|ちょっと好き)([男女]性|お(兄|に[いぃ]|姉|ね[えぇ])さん)/g], penalty:50},
   { regexes:[/お迎え行きます/g], penalty:20},
   { regexes:[/セフレ/g], penalty:20},
   { regexes:[/(パパ|ママ)活/g], penalty:20},
   { regexes:[/(大人|オトナ)の関係?/g], penalty:20},
   { regexes:[/不倫/g], penalty:20},
-  { regexes:[/\b[1-3]\d+[歳才↑↓]/g, /\b1[5-8]\d+(cm|│)/g], penalty:20},
+  { regexes:[REGEX_AGE, REGEX_LENGTH], penalty:20},
+  { regexes:[REGEX_AGE, REGEX_BUST_SIZE], penalty:20},
+  { regexes:[REGEX_LENGTH, REGEX_BUST_SIZE], penalty:20},
   { regexes:[/オナニー|自慰|オナホ(ール)?/g], penalty:20},
   { regexes:[/おっぱい|まんこ|クリ(トリス|派)|アナル|処女/g], penalty:20},
   { regexes:[/ペニス|ちんちん|ちんこ|童貞/g], penalty:20},
   { regexes:[/セックス|\bsex\b|夜の営み/g], penalty:20},
   { regexes:[/フェラ(チオ)?/g], penalty:20},
+  { regexes:[/放尿/g], penalty:20},
+  { regexes:[/首[締絞]め/g], penalty:20},
   { regexes:[/騎乗位/g], penalty:20},
   { regexes:[/快楽/g], penalty:20},
   { regexes:[/エロテロリスト/g], penalty:20},
+  { regexes:[/痴漢/g], penalty:10},
+  { regexes:[/line\.me/g], penalty:10},
   { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]|スケベ/g], penalty:10},
+  { regexes:[/\b[\d,]+[億万]円/g], penalty:10},
+  { regexes:[/社を?経営/g], penalty:10},
   { regexes:[/\bLINE\b/g], penalty:10},
   { regexes:[/噛まれ|攻められ/g], penalty:10},
   { regexes:[/ヤリたい/g], penalty:10},
@@ -60,24 +72,35 @@ const rules = [
   { regexes:[/爆益/g], penalty:10},
   { regexes:[/変態/g], penalty:10},
   { regexes:[/秘密厳守/g], penalty:10},
+  { regexes:[/プレイが(したい|好き)/g], penalty:10},
+  { regexes:[/カジュアルパートナー/g], penalty:5},
   { regexes:[/ストレス発散/g], penalty:5},
   { regexes:[/ライン/g], penalty:5},
   { regexes:[/\bDM\b|チャット|トーク|通話|メッセ|ﾒｯｾ/g], penalty:5},
+  { regexes:[/連絡先交換/g], penalty:5},
+  { regexes:[/特別な(友達|友だち|ともだち)/g], penalty:5},
   { regexes:[/投資/g], penalty:5},
   { regexes:[/バイナリー/g], penalty:5},
   { regexes:[/仮想通貨/g], penalty:5},
   { regexes:[/為替|\bFX\b/g], penalty:5},
-  { regexes:[/資産運用/g], penalty:5},
+  { regexes:[/資産/g], penalty:5},
+  { regexes:[/運用/g], penalty:5},
   { regexes:[/達成/g], penalty:5},
   { regexes:[/社長|コンサル(タント)?|\bOL\b|看護(師|学生)|人妻|セレブママ|大学\d年生?|だいがくせー/g], penalty:5},
   { regexes:[/[男女]子/g], penalty:5},
-  { regexes:[/[1-3]\d[歳才]|アラ(サー|フォー|フィフ)/g], penalty:5},
+  { regexes:[REGEX_AGE], penalty:5},
   { regexes:[/地方|出身/g], penalty:5},
   { regexes:[/性格/g, /\b[MS]\b/g], penalty:5},
   { regexes:[/(下|シモ)ネタ/g, /[す好]き/g], penalty:5},
   { regexes:[/バナナ|🍌/g], penalty:5},
-  { regexes:[/募集/g], penalty:5},
-  { regexes:[/フォローして|フォロリツ/g], penalty:5},
+  { regexes:[/募集|受け?付け?/g], penalty:5},
+  { regexes:[/起業/g], penalty:5},
+  { regexes:[/恋愛/g], penalty:5},
+  { regexes:[/離婚/g], penalty:5},
+  { regexes:[/デート/g], penalty:5},
+  { regexes:[/条件が?合えば/g], penalty:5},
+  { regexes:[/(友達|友だち|ともだち)になって/g], penalty:5},
+  { regexes:[/フォローして|フォロリツ|絡んで|こっち[来き]て/g], penalty:5},
   { regexes:[/貧乏|底辺|低賃金/g], penalty:5},
   { regexes:[/口座/g], penalty:5},
   { regexes:[/レクチャー|お教えします/g], penalty:5},
