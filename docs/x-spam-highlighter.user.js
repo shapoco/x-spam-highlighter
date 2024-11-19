@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.15
+// @version     1.0.16
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -56,7 +56,7 @@ const rules = [
   { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]?|えちえち|スケベ/g], penalty:10},
   { regexes:[/\b[\d,]+万円/g], penalty:10},
   { regexes:[/\b[\d,]+億円?/g], penalty:10},
-  { regexes:[/社を?経営/g], penalty:10},
+  { regexes:[/\d*社を?経営/g], penalty:10},
   { regexes:[/\bLINE\b/g], penalty:10},
   { regexes:[/噛まれ|攻められ/g], penalty:10},
   { regexes:[/ヤリたい/g], penalty:10},
@@ -112,6 +112,7 @@ const rules = [
   { regexes:[/絡みに行く/g], penalty:5},
   { regexes:[/フォローして|フォロリツ|絡んで|こっち[来き]て/g], penalty:5},
   { regexes:[/貧乏|底辺|低賃金/g], penalty:5},
+  { regexes:[/[年月]収|手取り?/g], penalty:5},
   { regexes:[/口座/g], penalty:5},
   { regexes:[/レクチャー|お教えします/g], penalty:5},
   { regexes:[/[❤🩷🧡💛💚💙🩵💜🤎🖤🩶🤍💘💓💔💕💖💗💝💞💟❣😍😘😻💑💏💌🏩💒]/g], penalty:5},
