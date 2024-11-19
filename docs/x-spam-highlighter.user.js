@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.11
+// @version     1.0.12
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -19,13 +19,13 @@ const followButtonDataIdRegex = /(\d+)-(un)?(follow|block)/;
 
 const REGEX_AGE = /\b[1-3]\d+(歳|才|さい|↑|↓)|アラ(サー|フォー|フィフ)/g;
 const REGEX_LENGTH = /\b1[3-8]\d+(cm|センチ|│)/g;
-const REGEX_BUST_SIZE = /\b[A-Z](カップ|cup)/g;
+const REGEX_BUST = /\b[A-Z](カップ|cup)/g;
 
 // 評価ルール
 const rules = [
 //{ regexes:[/あ/g], penalty:100}, // テスト用
   { regexes:[/お金|現金|\d*万円/g, /配布|配り|配る|配っ[てた]?|プレゼント|分配/g], penalty:50},
-  { regexes:[/びんぼう|貧乏|底辺/g, /成り上がり/g], penalty:50},
+  { regexes:[/びんぼう|貧乏|貧困|底辺/g, /成り上がり/g], penalty:50},
   { regexes:[/(気にな((って)?る|っちゃう)|興味の?ある|ちょっと好き)([男女]性|お(兄|に[いぃ]|姉|ね[えぇ])さん)/g], penalty:50},
   { regexes:[/お迎え行きます/g], penalty:20},
   { regexes:[/セフレ/g], penalty:20},
@@ -33,8 +33,8 @@ const rules = [
   { regexes:[/(大人|オトナ)の関係?/g], penalty:20},
   { regexes:[/不倫/g], penalty:20},
   { regexes:[REGEX_AGE, REGEX_LENGTH], penalty:20},
-  { regexes:[REGEX_AGE, REGEX_BUST_SIZE], penalty:20},
-  { regexes:[REGEX_LENGTH, REGEX_BUST_SIZE], penalty:20},
+  { regexes:[REGEX_AGE, REGEX_BUST], penalty:20},
+  { regexes:[REGEX_LENGTH, REGEX_BUST], penalty:20},
   { regexes:[/オナニー|自慰|オナホ(ール)?/g], penalty:20},
   { regexes:[/おっぱい|まんこ|クリ(トリス|派)|アナル|処女/g], penalty:20},
   { regexes:[/ペニス|ちんちん|ちんこ|童貞/g], penalty:20},
@@ -48,7 +48,8 @@ const rules = [
   { regexes:[/痴漢/g], penalty:10},
   { regexes:[/line\.me/g], penalty:10},
   { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]|スケベ/g], penalty:10},
-  { regexes:[/\b[\d,]+[億万]円/g], penalty:10},
+  { regexes:[/\b[\d,]+万円/g], penalty:10},
+  { regexes:[/\b[\d,]+億円?/g], penalty:10},
   { regexes:[/社を?経営/g], penalty:10},
   { regexes:[/\bLINE\b/g], penalty:10},
   { regexes:[/噛まれ|攻められ/g], penalty:10},
@@ -86,7 +87,7 @@ const rules = [
   { regexes:[/資産/g], penalty:5},
   { regexes:[/運用/g], penalty:5},
   { regexes:[/達成/g], penalty:5},
-  { regexes:[/社長|コンサル(タント)?|\bOL\b|看護(師|学生)|人妻|セレブママ|大学\d年生?|だいがくせー/g], penalty:5},
+  { regexes:[/女?社長|コンサル(タント)?|\bOL\b|看護(師|学生)|人妻|セレブママ|大学\d年生?|だいがくせー/g], penalty:5},
   { regexes:[/[男女]子/g], penalty:5},
   { regexes:[REGEX_AGE], penalty:5},
   { regexes:[/地方|出身/g], penalty:5},
