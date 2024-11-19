@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.16
+// @version     1.0.17
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -81,8 +81,8 @@ const rules = [
   { regexes:[/変態/g], penalty:10},
   { regexes:[/秘密厳守/g], penalty:10},
   { regexes:[/プレイが(したい|[す好]き)/g], penalty:10},
+  { regexes:[/カジュアルパートナー/g], penalty:10},
   { regexes:[/お[じば]さん/g, /[す好]き/g], penalty:5},
-  { regexes:[/カジュアルパートナー/g], penalty:5},
   { regexes:[/ストレス発散/g], penalty:5},
   { regexes:[/ライン/g], penalty:5},
   { regexes:[/\bDM\b|チャット|トーク|通話|メッセ|ﾒｯｾ/g], penalty:5},
@@ -108,6 +108,8 @@ const rules = [
   { regexes:[/離婚/g], penalty:5},
   { regexes:[/デート/g], penalty:5},
   { regexes:[/条件が?合えば/g], penalty:5},
+  { regexes:[/パートナー|お相手/g], penalty:5},
+  { regexes:[/メンヘラ/g], penalty:5},
   { regexes:[/(友達|友だち|ともだち)になって/g], penalty:5},
   { regexes:[/絡みに行く/g], penalty:5},
   { regexes:[/フォローして|フォロリツ|絡んで|こっち[来き]て/g], penalty:5},
