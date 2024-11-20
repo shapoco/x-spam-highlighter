@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.19
+// @version     1.0.20
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -52,11 +52,11 @@ const rules = [
   { regexes:[REGEX_LENGTH, REGEX_BUST], add:20},
   { regexes:[/オナニスト/g], add:20},
   { regexes:[/今日の下着/g], add:20},
-  { regexes:[/オ[ナ●〇]ニー|自慰|(ひとり|[一1]人)(えっち|H)|自慰/g], add:20},
+  { regexes:[/オ[ナ●〇★☆]ニー|自慰|(ひとり|[一1]人)(えっち|H)|自慰/g], add:20},
   { regexes:[/オナホ(ール)?/g], add:20},
   { regexes:[/おっぱい|まんこ|クリ(トリス|派)|アナル|処女/g], add:20},
   { regexes:[/ペニス|ちんちん|ちんこ|童貞/g], add:20},
-  { regexes:[/セックス|\bsex\b|夜の営み/g], add:20},
+  { regexes:[/セックス|\bsex\b|夜の営み|オ[フ●〇★☆]パコ/g], add:20},
   { regexes:[/フェラ(チオ)?/g], add:20},
   { regexes:[/放尿/g], add:20},
   { regexes:[/首[締絞]め/g], add:20},
@@ -71,6 +71,7 @@ const rules = [
   { regexes:[REGEX_CASTING, /↓{4,}/g], add:10},
   { regexes:[REGEX_MEDIA, /↓{4,}/g], add:10},
   { regexes:[/フォロワー[減へ]ってる/g], add:10},
+  { regexes:[/18禁/g], add:10},
   { regexes:[/快楽/g], add:10},
   { regexes:[/快感研究/g], add:10},
   { regexes:[/娘の(彼|カレ)/g], add:10},
@@ -88,7 +89,7 @@ const rules = [
   { regexes:[/ムラムラ/g], add:10},
   { regexes:[/役に[立た]ちた(い|くて)/g], add:10},
   { regexes:[/\bFIRE\b/g], add:10},
-  { regexes:[/[見み][せ●〇][合あ]い|[見み]せ([合あ]い)?っこ/g], add:10},
+  { regexes:[/[見み][せ●〇★☆][合あ]い|[見み]せ([合あ]い)?っこ/g], add:10},
   { regexes:[/フォロバ/g, /(💯|100)[%％]?/g], add:10},
   { regexes:[/[出で][会あ](い|える)|会える?/g], add:10},
   { regexes:[/サロン/g], add:10},
