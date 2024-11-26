@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.23
+// @version     1.0.24
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -94,7 +94,7 @@ const rules = [
   { regexes:[/役に[立た]ちた(い|くて)/g], add:10},
   { regexes:[/\bFIRE\b/g], add:10},
   { regexes:[/[見み][せ●〇★☆][合あ]い|[見み]せ([合あ]い)?っこ/g], add:10},
-  { regexes:[/フォロバ/g, /(💯|100)[%％]?/g], add:10},
+  { regexes:[/フォロバ|相互フォロー/g, /(💯|100)[%％]?|支援/g], add:10},
   { regexes:[/[出で][会あ](い|える)|会える?/g], add:10},
   { regexes:[/定期可能/g], add:10},
   { regexes:[/サロン/g], add:10},
@@ -120,7 +120,7 @@ const rules = [
   { regexes:[/アルバイト/g, /給与|[日時]給|日払い/g], add:10},
   { regexes:[/勤務時間は制限ありません/g], add:10},
   { regexes:[/夜のお店|キャバ嬢/g], add:10},
-  { regexes:[/(彼[氏女]|カレシ|カノジョ)[無な]し/g], add:10},
+  { regexes:[/彼[氏女]|カレシ|カノジョ/g, /[無な]し|[居い]る/g], add:10},
   { regexes:[REGEX_GRADE, REGEX_LONELY], add:10},
   { regexes:[REGEX_LIVING_ALONE, REGEX_LONELY], add:10},
   { regexes:[REGEX_MARRIAGE_STATE, REGEX_LONELY], add:10},
@@ -131,10 +131,12 @@ const rules = [
   { regexes:[REGEX_REGION, REGEX_JOB], add:10},
   { regexes:[/連絡先|画像|動画/g, /交換/g], add:10},
   { regexes:[/凍結回避|凍避/g], add:10},
+  { regexes:[/条件が?合えば|相性を?確かめ/g], add:10},
   { regexes:[/自動/g], add:5}, // todo: bot の判定をちゃんとやる
   { regexes:[/イイコト/g], add:5}, // todo: カタカナだけにヒットさせたい
   { regexes:[/美男美女/g], add:5},
   { regexes:[/楽天/g], add:5},
+  { regexes:[/メルカリ/g], add:5},
   { regexes:[/アフィリエイト/g], add:5},
   { regexes:[/秘密|ヒミツ|内緒|ナイショ|秘訣|ヒケツ/g], add:5},
   { regexes:[/コミュニティ/g, /運営|お手伝い/g], add:5},
@@ -172,7 +174,6 @@ const rules = [
   { regexes:[/恋人|コイビト/g], add:5},
   { regexes:[/離婚/g], add:5},
   { regexes:[/デート/g], add:5},
-  { regexes:[/条件が?合えば/g], add:5},
   { regexes:[/パートナー|お相手/g], add:5},
   { regexes:[/(仲|なか)[良よ]し/g], add:5},
   { regexes:[/メンヘラ/g], add:5},
