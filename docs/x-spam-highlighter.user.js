@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.24
+// @version     1.0.25
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -52,6 +52,7 @@ const rules = [
   { regexes:[REGEX_AGE, REGEX_BUST], add:20},
   { regexes:[REGEX_LENGTH, REGEX_BUST], add:20},
   { regexes:[/オナニスト/g], add:20},
+  { regexes:[/ヤリ(マン|チン)|ビッチ/g], add:20},
   { regexes:[/今日の下着/g], add:20},
   { regexes:[/オ[ナ●〇★☆]ニー|自慰|(ひとり|[一1]人)(えっち|H)|自慰/g], add:20},
   { regexes:[/オナホ(ール)?/g], add:20},
@@ -69,7 +70,7 @@ const rules = [
   { regexes:[/インサイダー情報/g], add:20},
   { regexes:[/顔びみょ/g, /全振り/g], add:20},
   { regexes:[REGEX_SEXUAL_DESIRE], add:20},
-  { regexes:[REGEX_MEDIA, /(オナ|えっ?ちな?|丸見え)/g], add:20},
+  { regexes:[REGEX_MEDIA, /(オナ|えっ?ちな?|丸見え|大人|オトナ)/g], add:20},
   { regexes:[REGEX_MEDIA, REGEX_CASTING], add:10},
   { regexes:[REGEX_CASTING, /↓{4,}/g], add:10},
   { regexes:[REGEX_MEDIA, /↓{4,}/g], add:10},
