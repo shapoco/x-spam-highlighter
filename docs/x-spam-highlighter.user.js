@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.21
+// @version     1.0.23
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -26,10 +26,10 @@ const REGEX_CASTING = /垂れ流し|配信|発信/g;
 const REGEX_LIVING_ALONE = /(ひとり|[1一]人)暮らし/g;
 const REGEX_MARRIAGE_STATE = /独身|未婚|既婚/g;
 const REGEX_LONELY = /(寂|さび)しい/g;
-const REGEX_JOB = /元?(\bOL\b|キャバ嬢|看護師|カフェ店員)/g;
-const REGEX_GRADE = /[一二三1-3]年生?/g;
+const REGEX_JOB = /元?(\bOL\b|キャバ嬢|風俗|フ[ウー]ゾク|看護師|カフェ店員|メンズ?エステ?|教[師諭])/g;
+const REGEX_GRADE = /(\b[1-3]|[一二三])年生?|[高大]([一二三]|[1-3]\b)/g;
 const REGEX_CLUB = /(水泳|演劇|卓球|バレー|吹奏楽)部/g;
-const REGEX_SEXUAL_DESIRE = /(性|せ[ーいぃ])(欲|[よょ]く)/g;
+const REGEX_SEXUAL_DESIRE = /(性|せ[ーいぃ])(欲|[よょ]く)|欲求不満/g;
 const REGEX_FREE = /無料|無償|フリー/g;
 
 // 評価ルール
@@ -37,7 +37,7 @@ const rules = [
 //{ regexes:[/あ/g], add:100}, // テスト用
   { regexes:[/お金|現金|\d*万円/g, /配布|配り|配る|配っ[てた]?|プレゼント|分配|給付/g], add:50},
   { regexes:[/びんぼ[ーう]|貧乏|貧困|底辺/g, /成り?上が?り/g], add:50},
-  { regexes:[/(気にな(る|ってる|っちゃう)|興味[がの]?ある|ちょっと好きな?|[見み]てみたい)(方|かた|人|ひと|[男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん)(だけ)?[にを]?/g], add:50},
+  { regexes:[/(気にな(る|ってる|っちゃう)|興味[がの]?ある|ちょっと好きな?|[見み]てみたい)(方|かた|人|ひと|[男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん|メンズ)(だけ)?[にを]?/g], add:50},
   { regexes:[REGEX_SEXUAL_DESIRE, /(強|つよ)め|獣|けもの|異常|宇宙|お[化ば]け|鬼|(馬|うま)(並み?|なみ)/g], add:50},
   { regexes:[/お迎え行きます/g], add:20},
   { regexes:[/セフ[レ友]/g], add:20},
@@ -82,6 +82,7 @@ const rules = [
   { regexes:[/痴漢/g], add:10},
   { regexes:[/line.me/g], add:10},
   { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]?|えちえち|スケベ/g], add:10},
+  { regexes:[/(気持ち|きもち)[良い][いー]/g], add:10},
   { regexes:[/\b[\d,]+万円/g], add:10},
   { regexes:[/\b[\d,]+億円?/g], add:10},
   { regexes:[/\d*社を?経営/g], add:10},
@@ -95,6 +96,7 @@ const rules = [
   { regexes:[/[見み][せ●〇★☆][合あ]い|[見み]せ([合あ]い)?っこ/g], add:10},
   { regexes:[/フォロバ/g, /(💯|100)[%％]?/g], add:10},
   { regexes:[/[出で][会あ](い|える)|会える?/g], add:10},
+  { regexes:[/定期可能/g], add:10},
   { regexes:[/サロン/g], add:10},
   { regexes:[/セミナー|講座|塾/g], add:10},
   { regexes:[/(裏|ウラ)(垢|アカ)/g], add:10},
@@ -102,6 +104,7 @@ const rules = [
   { regexes:[/フェチ/g], add:10},
   { regexes:[/抽選/g], add:10},
   { regexes:[/当選/g], add:10},
+  { regexes:[/高確率|確率変動/g], add:10},
   { regexes:[/(稼|かせ)(ぎ|げ[るば]|ぐ|い[だで])/g], add:10},
   { regexes:[/儲(か(る|り|った)|け[たて]?)/g], add:10},
   { regexes:[/お(金|かね)を[増ふ]やす/g], add:10},
@@ -118,6 +121,7 @@ const rules = [
   { regexes:[/勤務時間は制限ありません/g], add:10},
   { regexes:[/夜のお店|キャバ嬢/g], add:10},
   { regexes:[/(彼[氏女]|カレシ|カノジョ)[無な]し/g], add:10},
+  { regexes:[REGEX_GRADE, REGEX_LONELY], add:10},
   { regexes:[REGEX_LIVING_ALONE, REGEX_LONELY], add:10},
   { regexes:[REGEX_MARRIAGE_STATE, REGEX_LONELY], add:10},
   { regexes:[REGEX_LIVING_ALONE, REGEX_MARRIAGE_STATE], add:10},
@@ -125,6 +129,9 @@ const rules = [
   { regexes:[REGEX_LIVING_ALONE, REGEX_JOB], add:10},
   { regexes:[REGEX_LIVING_ALONE, REGEX_REGION], add:10},
   { regexes:[REGEX_REGION, REGEX_JOB], add:10},
+  { regexes:[/連絡先|画像|動画/g, /交換/g], add:10},
+  { regexes:[/凍結回避|凍避/g], add:10},
+  { regexes:[/自動/g], add:5}, // todo: bot の判定をちゃんとやる
   { regexes:[/イイコト/g], add:5}, // todo: カタカナだけにヒットさせたい
   { regexes:[/美男美女/g], add:5},
   { regexes:[/楽天/g], add:5},
@@ -139,7 +146,6 @@ const rules = [
   { regexes:[/(虐|い[じぢ])め(て|る|られ)/g], add:5},
   { regexes:[/イチャ甘/g], add:5},
   { regexes:[/\bDM\b|チャット|トーク|通話|メッセ|ﾒｯｾ/g], add:5},
-  { regexes:[/連絡先交換/g], add:5},
   { regexes:[/特別な(友達|友だち|ともだち)/g], add:5},
   { regexes:[/投資/g], add:5},
   { regexes:[/株/g, /分析/g], add:5},
