@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.25
+// @version     1.0.26
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -20,7 +20,7 @@ const followButtonDataIdRegex = /(\d+)-(un)?(follow|block)/;
 const REGEX_AGE = /\b[1-3]\d(歳|才|age|さい|↑|↓|[台代]([前後]半)?|中盤)|二十歳|はたち|アラ(サー|フォー|フィフ)/g;
 const REGEX_LENGTH = /\b1[3-8]\d+(cm|㎝|センチ|│)/g;
 const REGEX_BUST = /\b[A-Z](カップ|cup)/g;
-const REGEX_REGION = /(千代田|中央|港|新宿|文京|台東|墨田|江東|品川|目黒|大田|世田谷|渋谷|中野|杉並|豊島|北|荒川|板橋|練馬|足立|葛飾|江戸川|23)区|地方|東京/g;
+const REGEX_REGION = /東京|都内|(千代田|中央|港|新宿|文京|台東|墨田|江東|品川|目黒|大田|世田谷|渋谷|中野|杉並|豊島|北|荒川|板橋|練馬|足立|葛飾|江戸川|23)区|地方/g;
 const REGEX_MEDIA = /動画|写真?|録画/g;
 const REGEX_CASTING = /垂れ流し|配信|発信/g;
 const REGEX_LIVING_ALONE = /(ひとり|[1一]人)暮らし/g;
@@ -59,6 +59,7 @@ const rules = [
   { regexes:[/おっぱい|まんこ|クリ(トリス|派)|ア[ナ●〇★☆]ル|処女/g], add:20},
   { regexes:[/ペニス|ちんちん|ちんこ|童貞|前立腺/g], add:20},
   { regexes:[/セックス|\bsex\b|夜の営み|オ[フ●〇★☆]パコ/g], add:20},
+  { regexes:[/正常位|後背位|騎乗位|座位|立位|([立た]ち|寝)バック|側位/g], add:20},
   { regexes:[/フェラ(チオ)?/g], add:20},
   { regexes:[/放尿/g], add:20},
   { regexes:[/首[締絞]め/g], add:20},
