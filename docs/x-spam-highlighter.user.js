@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.27
+// @version     1.0.28
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -40,6 +40,7 @@ const rules = [
   { regexes:[/(気にな(る|ってる|っちゃう)|興味[がの]?ある|ちょっと好きな?|[見み]てみたい)(方|かた|人|ひと|[男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん|メンズ)(だけ)?[にを]?/g], add:50},
   { regexes:[REGEX_SEXUAL_DESIRE, /(強|つよ)め|獣|けもの|異常|宇宙|お[化ば]け|鬼|(馬|うま)(並み?|なみ)/g], add:50},
   { regexes:[/秘密の感情/g], add:50},
+  { regexes:[/せふが[欲ほ]しー+/g], add:50},
   { regexes:[/お迎え行きます/g], add:20},
   { regexes:[/セフ[レ友]/g], add:20},
   { regexes:[/(大人|オトナ|体)の関係/g], add:20},
@@ -145,6 +146,7 @@ const rules = [
   { regexes:[/連絡先|画像|動画/g, /交換/g], add:10},
   { regexes:[/凍結回避|凍避/g], add:10},
   { regexes:[/条件が?合えば|相性を?確かめ/g], add:10},
+  { regexes:[/もっとしたい/g], add:10},
   { regexes:[/自動/g], add:5}, // todo: bot の判定をちゃんとやる
   { regexes:[/イイコト/g], add:5}, // todo: カタカナだけにヒットさせたい
   { regexes:[/美男美女/g], add:5},
