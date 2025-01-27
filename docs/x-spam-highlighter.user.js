@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.29
+// @version     1.0.30
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -39,6 +39,7 @@ const rules = [
   { regexes:[/びんぼ[ーう]|貧乏|貧困|底辺/g, /成り?上が?り/g], add:50},
   { regexes:[/(気にな(る|ってる|っちゃう)|興味[がの]?ある|ちょっと好きな?|[見み]てみたい)(方|かた|人|ひと|[男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん|メンズ)(だけ)?[にを]?/g], add:50},
   { regexes:[REGEX_SEXUAL_DESIRE, /(強|つよ)め|獣|けもの|異常|宇宙|お[化ば]け|鬼|(馬|うま)(並み?|なみ)/g], add:50},
+  { regexes:[/通話の?相手を(探|さが)してい?ます/g], add:50},
   { regexes:[/秘密の感情/g], add:50},
   { regexes:[/せふが[欲ほ]しー+/g], add:50},
   { regexes:[/お迎え行きます/g], add:20},
@@ -91,7 +92,7 @@ const rules = [
   { regexes:[/痴漢/g], add:10},
   { regexes:[/ムチボディ|ぽっちゃり/g], add:10},
   { regexes:[/line.me/g], add:10},
-  { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]?|えちえち|スケベ/g], add:10},
+  { regexes:[/エロい?|\bHな|エッ?チな?|えっ?ち[いぃ]?|えちえち|スケベ|夜の/g], add:10},
   { regexes:[/(気持ち|きもち)[良い][いー]/g], add:10},
   { regexes:[/\b[\d,]+万円/g], add:10},
   { regexes:[/\b[\d,]+億円?/g], add:10},
