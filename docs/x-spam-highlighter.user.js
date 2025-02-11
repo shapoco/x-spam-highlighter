@@ -3,7 +3,7 @@
 // @namespace   https://github.com/shapoco/x-spam-highlighter/
 // @match       https://x.com/*
 // @grant       none
-// @version     1.0.30
+// @version     1.0.31
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @supportURL  https://github.com/shapoco/x-spam-highlighter/
@@ -78,6 +78,7 @@ const rules = [
   { regexes:[/見られたい症候群/g], add:20},
   { regexes:[/インサイダー情報/g], add:20},
   { regexes:[/顔びみょ/g, /全振り/g], add:20},
+  { regexes:[/(オナ|おな)指示/g], add:20},
   { regexes:[REGEX_SEXUAL_DESIRE], add:20},
   { regexes:[REGEX_MEDIA, /(オナ|えっ?ちな?|丸見え|大人|オトナ)/g], add:20},
   { regexes:[REGEX_MEDIA, REGEX_CASTING], add:10},
