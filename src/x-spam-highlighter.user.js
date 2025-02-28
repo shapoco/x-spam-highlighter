@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.1.63
+// @version     1.1.64
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -275,7 +275,7 @@
 
       this.intervalId = window.setInterval(() => {
         // フォロワー一覧でのみ処理を実施
-        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*followers/)) {
+        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*(following|followers)/)) {
           this.scanUsers();
           this.highlightLocks();
         }
