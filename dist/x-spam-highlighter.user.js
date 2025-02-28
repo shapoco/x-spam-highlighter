@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name        X Spam Highlighter (Debug)
-// @namespace   http://localhost:51480/
-// @updateURL   http://localhost:51480/x-spam-highlighter.user.js
-// @downloadURL http://localhost:51480/x-spam-highlighter.user.js
+// @name        X Spam Highlighter
+// @namespace   https://shapoco.github.io/x-spam-highlighter/
+// @updateURL   https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js
+// @downloadURL https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js
 // @match       https://x.com/*
 // @version     1.1.13
 // @author      Shapoco
@@ -272,7 +272,7 @@
       }
       if (!this.followerListRoot) return;
 
-      Array.from(this.followerListRoot.children).forEach((item) => this.processUser(item));
+      Array.from(this.followerListRoot.children).forEach((item) =>this.processUser(item));
     }
 
     // 要素がフォローボタンかどうかを返す
