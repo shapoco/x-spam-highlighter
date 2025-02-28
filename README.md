@@ -14,7 +14,7 @@ PC 版 X のフォロワー覧でスパムの可能性があるアカウント�
 ## インストール方法
 
 1. Chrome または Firefox に [Violentmonkey](https://violentmonkey.github.io/) をインストールします。
-2. [こちらのリンク](https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
+2. [こちらのリンク](https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
 
 ## 動かない場合
 
