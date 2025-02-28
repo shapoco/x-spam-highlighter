@@ -4,7 +4,7 @@
 // @updateURL   https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js
 // @downloadURL https://shapoco.github.io/x-spam-highlighter/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.1.17
+// @version     1.1.60
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -12,6 +12,8 @@
 
 (function () {
   'use strict';
+
+  const APP_NAME = 'X Spam Highlighter';
 
   const PROCESS_INTERVAL_MS = 300;
   const KEYWORD_BACKGROUND_COLOR = 'rgba(255, 255, 0, 0.25)';
@@ -221,6 +223,30 @@
     return tmp.substring(1, tmp.length - 2);
   })();
 
+  // User ID と作成日時の関係
+  const USER_ID_DICT = [
+    {
+      18548500: new Date('2009-01-02').getTime(),
+      129095500: new Date('2010-04-03').getTime(),
+      341869500: new Date('2011-07-25').getTime(),
+      473422500: new Date('2012-01-25').getTime(),
+      1703770500: new Date('2013-08-27').getTime(),
+      2475285500: new Date('2014-05-03').getTime(),
+      3034548500: new Date('2015-02-21').getTime(),
+    },
+    {
+      793757834504765000: new Date('2016-11-02').getTime(),
+      831503904093315000: new Date('2017-02-14').getTime(),
+      1086585820939575000: new Date('2019-01-19').getTime(),
+      1332120443281685000: new Date('2020-11-27').getTime(),
+      1412250140430145000: new Date('2021-07-06').getTime(),
+      1518304543011785000: new Date('2022-04-25').getTime(),
+      1644487268177185000: new Date('2023-04-08').getTime(),
+      1745152119630445000: new Date('2024-01-11').getTime(),
+      1894161355206525000: new Date('2025-02-25').getTime(),
+    }
+  ];
+
   class XSpamHighlighter {
     constructor() {
       this.lastLocation = null;
@@ -262,6 +288,10 @@
         Array.from(document.querySelectorAll('button'))
           .filter(btn => this.isFollowButton(btn));
       this.followButtons = this.followButtons.concat(newFollowButtons);
+
+      // 作成日時の表示
+      newFollowButtons.forEach(btn => this.showCreatedDate(btn));
+
       if (this.followButtons.length < 2) return;
 
       // フォローボタンの共通の親要素を探す
@@ -283,7 +313,8 @@
       if (!btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX)) return false;
 
       // 既知のボタンは除外
-      if (btn in this.followButtons) return false;
+      if (btn.dataset.xshl_known) return false;
+      btn.dataset.xshl_known = true;
 
       // ビューポートの端にある要素は除外
       const vw = window.innerWidth;
@@ -291,6 +322,88 @@
       if (rect.right < vw / 2 || vw * 3 / 4 < rect.left) return false;
 
       return true;
+    }
+
+    showCreatedDate(btn) {
+      if (!btn.dataset.testid) return false;
+      const m = btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX);
+
+      let elapsedStr = 'Unknown';
+      try {
+        if (!m) return false;
+        const uid = parseFloat(m[1]);
+
+        let id0 = -1, id1 = -1;
+        let date0 = -1, date1 = -1;
+
+        // USER_ID_DICT1 からキーが最も近い2要素を得る
+        for (let i = 0; i < USER_ID_DICT.length; i++) {
+          const dict = USER_ID_DICT[i];
+          let logId0 = -1, logDate0 = -1, diff0 = Number.MAX_VALUE;
+          let logId1 = -1, logDate1 = -1, diff1 = Number.MAX_VALUE;
+          for (let key in dict) {
+            const keyUid = parseFloat(key);
+            const diff = Math.abs(uid - keyUid);
+            if (diff < diff0) {
+              logId1 = logId0;
+              logDate1 = logDate0;
+              logId0 = keyUid;
+              logDate0 = dict[key];
+              diff1 = diff0;
+              diff0 = diff;
+            }
+            else if (diff < diff1) {
+              logId1 = keyUid;
+              logDate1 = dict[key];
+              diff1 = diff;
+            }
+          }
+
+          if (logId0 >= 0 && logId1 >= 0) {
+            id0 = logId0; date0 = logDate0;
+            id1 = logId1; date1 = logDate1;
+            if (logId0 <= uid && uid < logId1) break;
+          }
+        }
+
+        const estTime = date0 + (date1 - date0) * (uid - id0) / (id1 - id0);
+
+        const dateStr = new Date(estTime).toLocaleDateString();
+
+        const days = (new Date().getTime() - estTime) / (1000 * 60 * 60 * 24);
+        const years = days / 365.2425;
+        const month = years * 12;
+        const elapsedStr =
+          days < 1 ? '1日以内' :
+            month < 1 ? `${Math.round(days)}日前` :
+              years < 1 ? `${Math.round(month * 10) / 10}ヶ月前` :
+                `${Math.round(years * 10) / 10}年前`;
+
+        const div = document.createElement('div');
+        div.textContent = elapsedStr;
+        div.title = `${dateStr} (${APP_NAME} による User ID からの推定)`;
+        div.style.position = 'absolute';
+        div.style.right = '0';
+        div.style.top = '-20px';
+        div.style.fontSize = '12px';
+
+        const MONTH_MIN = 3;
+        const MONTH_MAX = 6;
+        let alpha = 0;
+        if (month < MONTH_MAX) {
+          alpha = Math.min(1, (MONTH_MAX - month) / (MONTH_MAX - MONTH_MIN));
+          div.style.fontWeight = 'bold';
+        }
+        const r = Math.min(255, 128 + Math.floor(alpha * 64));
+        const g = Math.max(0, 128 - Math.floor(alpha * 128));
+        const b = Math.min(255, 128 + Math.floor(alpha * 127));
+        div.style.color = `rgb(${r}, ${g}, ${b})`;
+
+        btn.parentElement.appendChild(div);
+      }
+      catch (e) {
+        console.error(e);
+      }
     }
 
     // 要素 a と b の共通の親要素を返す
@@ -422,7 +535,6 @@
     }
 
     highlightLocks() {
-      // SVG要素のうちdata-idに"icon-lock"が設定されているものを抽出して強調表示する
       const svgs = Array.from(document.querySelectorAll('svg'))
         .filter(elem => elem.dataset.testid && elem.dataset.testid == 'icon-lock');
       for (let svg of svgs) {
@@ -430,7 +542,8 @@
         if (svg.style.fill == COLOR) continue;
         svg.style.fill = COLOR;
         svg.style.filter = 'drop-shadow(0 0 5px rgba(192, 64, 255, 0.75))';
-        svg.style.transform ='scale(1.25)';
+        svg.style.transform = 'scale(1.2)';
+        svg.title = `(${APP_NAME} による強調表示)`;
       }
     }
   }
