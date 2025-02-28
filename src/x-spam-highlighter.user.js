@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.1.13
+// @version     1.1.17
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -248,9 +248,10 @@
       };
 
       this.intervalId = window.setInterval(() => {
+        // フォロワー一覧でのみ処理を実施
         if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*followers/)) {
-          // フォロワー一覧でのみ処理を実施
           this.scanUsers();
+          this.highlightLocks();
         }
       }, PROCESS_INTERVAL_MS);
     }
@@ -421,14 +422,14 @@
     }
 
     highlightLocks() {
-      // SVG要素のうちdata-idに"icon-lock"が設定されているものを抽出して強調表示する
       const svgs = Array.from(document.querySelectorAll('svg'))
         .filter(elem => elem.dataset.testid && elem.dataset.testid == 'icon-lock');
       for (let svg of svgs) {
-        const COLOR = '#ff0000';
-        if (svg.style.fill == '#ff0000') continue;
-        svg.style.fill = '#ff0000';
-        svg.style.filter = 'drop-shadow(0 0 5px rgba(255, 0, 0, 0.5))';
+        const COLOR = '#c040ff';
+        if (svg.style.fill == COLOR) continue;
+        svg.style.fill = COLOR;
+        svg.style.filter = 'drop-shadow(0 0 5px rgba(192, 64, 255, 0.75))';
+        svg.style.transform ='scale(1.2)';
       }
     }
   }
