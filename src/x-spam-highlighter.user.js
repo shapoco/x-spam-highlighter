@@ -4,16 +4,21 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.1.64
+// @version     1.1.90
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
+// @grant       GM.getValue
+// @grant       GM.setValue
+// @grant       GM_getValue
+// @grant       GM_setValue
 // ==/UserScript==
 
 (function () {
   'use strict';
 
   const APP_NAME = 'X Spam Highlighter';
+  const SETTING_KEY = 'xsphl_settings';
 
   const PROCESS_INTERVAL_MS = 300;
   const KEYWORD_BACKGROUND_COLOR = 'rgba(255, 255, 0, 0.25)';
@@ -253,10 +258,15 @@
       this.followButtons = [];
       this.followerListRoot = null;
       this.finishedElems = [];
+      this.settings = {
+        safeUsers: {},
+      };
     }
 
     start() {
-      window.onload = function () {
+      window.onload = () => {
+        this.loadSettings();
+
         const body = document.querySelector('body');
         const observer = new MutationObserver(function (mutations) {
           if (this.lastLocation != document.location.href) {
@@ -331,7 +341,8 @@
       let elapsedStr = 'Unknown';
       try {
         if (!m) return false;
-        const uid = parseFloat(m[1]);
+        const uidStr = m[1];
+        const uidNumber = parseFloat(uidStr);
 
         let id0 = -1, id1 = -1;
         let date0 = -1, date1 = -1;
@@ -343,7 +354,7 @@
           let logId1 = -1, logDate1 = -1, diff1 = Number.MAX_VALUE;
           for (let key in dict) {
             const keyUid = parseFloat(key);
-            const diff = Math.abs(uid - keyUid);
+            const diff = Math.abs(uidNumber - keyUid);
             if (diff < diff0) {
               logId1 = logId0;
               logDate1 = logDate0;
@@ -362,11 +373,11 @@
           if (logId0 >= 0 && logId1 >= 0) {
             id0 = logId0; date0 = logDate0;
             id1 = logId1; date1 = logDate1;
-            if (logId0 <= uid && uid < logId1) break;
+            if (logId0 <= uidNumber && uidNumber < logId1) break;
           }
         }
 
-        const estTime = date0 + (date1 - date0) * (uid - id0) / (id1 - id0);
+        const estTime = date0 + (date1 - date0) * (uidNumber - id0) / (id1 - id0);
 
         const dateStr = new Date(estTime).toLocaleDateString();
 
@@ -379,25 +390,56 @@
               years < 1 ? `${Math.round(month * 10) / 10}ヶ月前` :
                 `${Math.round(years * 10) / 10}年前`;
 
-        const div = document.createElement('div');
-        div.textContent = elapsedStr;
-        div.title = `${dateStr} (${APP_NAME} による User ID からの推定)`;
-        div.style.position = 'absolute';
-        div.style.right = '0';
-        div.style.top = '-20px';
-        div.style.fontSize = '12px';
+        const age = document.createElement('span');
+        age.textContent = elapsedStr;
+        age.title = `推定作成日: ${dateStr}`;
 
         const MONTH_MIN = 3;
         const MONTH_MAX = 6;
         let alpha = 0;
         if (month < MONTH_MAX) {
           alpha = Math.min(1, (MONTH_MAX - month) / (MONTH_MAX - MONTH_MIN));
-          div.style.fontWeight = 'bold';
+          age.style.fontWeight = 'bold';
         }
         const r = Math.min(255, 128 + Math.floor(alpha * 64));
         const g = Math.max(0, 128 - Math.floor(alpha * 128));
         const b = Math.min(255, 128 + Math.floor(alpha * 127));
-        div.style.color = `rgb(${r}, ${g}, ${b})`;
+        age.style.color = `rgb(${r}, ${g}, ${b})`;
+
+        const safeButton = document.createElement('button');
+
+        safeButton.style.backgroundColor = 'transparent';
+        safeButton.style.border = 'none';
+        safeButton.style.cursor = 'pointer';
+        safeButton.style.fontSize = '12px';
+        safeButton.style.padding = '0';
+        safeButton.style.margin = '0';
+        const updateSafeButton = () => {
+          if (this.isUserSafe(uidStr)) {
+            safeButton.textContent = '💚';
+            safeButton.style.opacity = 1;
+            safeButton.title = 'このユーザの安全マークを解除する';
+          }
+          else {
+            safeButton.textContent = '🩶';
+            safeButton.style.opacity = 0.5;
+            safeButton.title = 'このユーザを安全としてマークする';
+          }
+        };
+        safeButton.addEventListener('click', () => {
+          this.toggleSafeUser(uidStr);
+          updateSafeButton();
+        });
+        updateSafeButton();
+
+        const div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.right = '10px';
+        div.style.top = '-20px';
+        div.style.fontSize = '12px';
+        div.appendChild(age);
+        div.appendChild(document.createTextNode(' | '));
+        div.appendChild(safeButton);
 
         btn.parentElement.appendChild(div);
       }
@@ -546,6 +588,44 @@
         svg.title = `(${APP_NAME} による強調表示)`;
       }
     }
+
+    isUserSafe(uid) {
+      return uid in this.settings.safeUsers;
+    }
+
+    toggleSafeUser(uid) {
+      if (this.isUserSafe(uid)) {
+        delete this.settings.safeUsers[uid];
+      }
+      else {
+        this.settings.safeUsers[uid] = {};
+      }
+      this.saveSettings();
+    }
+
+    loadSettings() {
+      try {
+        this.settings = {
+          safeUsers: {},
+        };
+        const json = JSON.parse(GM_getValue(SETTING_KEY));
+        if (json) {
+          this.settings = Object.assign(this.settings, json);
+        }
+      }
+      catch (e) {
+        console.error(e);
+      }
+    }
+
+    saveSettings() {
+      try {
+        GM_setValue(SETTING_KEY, JSON.stringify(this.settings));
+      }
+      catch (e) {
+        console.error(e);
+      }
+    }
   }
 
   // 画像 (emoji) の alt を含む textContent
@@ -582,7 +662,7 @@
     return ret;
   }
 
-  window.xauto = new XSpamHighlighter();
-  window.xauto.start();
+  window.xsphl = new XSpamHighlighter();
+  window.xsphl.start();
 
 })();

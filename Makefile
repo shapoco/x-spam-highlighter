@@ -16,7 +16,7 @@ DOCS_DIR = docs
 deploy:
 	$(BIN_DIR)/increment_revision.py -f "$(SRC_DIR)/$(JS_NAME)"
 
-	mkdir -p dist
+	@mkdir -p dist
 	cp -f "$(SRC_DIR)/$(JS_NAME)" "$(DIST_DIR)/."
 	sed -i "$(DIST_DIR)/$(JS_NAME)" -e "s#http://localhost:[0-9]\+/#$(DIST_URL)#g"
 	sed -i "$(DIST_DIR)/$(JS_NAME)" -e "s# (Debug)##g"
