@@ -4,14 +4,12 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.1.90
+// @version     1.2.100
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
 // @grant       GM.getValue
 // @grant       GM.setValue
-// @grant       GM_getValue
-// @grant       GM_setValue
 // ==/UserScript==
 
 (function () {
@@ -264,8 +262,8 @@
     }
 
     start() {
-      window.onload = () => {
-        this.loadSettings();
+      window.onload = async () => {
+        await this.loadSettings();
 
         const body = document.querySelector('body');
         const observer = new MutationObserver(function (mutations) {
@@ -426,8 +424,8 @@
             safeButton.title = 'このユーザを安全としてマークする';
           }
         };
-        safeButton.addEventListener('click', () => {
-          this.toggleSafeUser(uidStr);
+        safeButton.addEventListener('click', async () => {
+          await this.toggleSafeUser(uidStr);
           updateSafeButton();
         });
         updateSafeButton();
@@ -469,6 +467,19 @@
       // 処理済みの要素は除く
       if (this.finishedElems.includes(elm)) return;
       this.finishedElems.push(elm);
+
+      // ユーザ ID を取得
+      let uid = null;
+      for (let btn of Array.from(elm.querySelectorAll('button'))) {
+        if (!btn.dataset.testid) continue;
+        const m = btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX);
+        if (m) {
+          uid = m[1];
+          break;
+        }
+      }
+      // 安全とマークされたユーザは無視する
+      if (uid && this.isUserSafe(uid)) return;
 
       const text = this.normalizeForHitTest(getTextContentWithAlt(elm));
 
@@ -593,22 +604,22 @@
       return uid in this.settings.safeUsers;
     }
 
-    toggleSafeUser(uid) {
+    async toggleSafeUser(uid) {
       if (this.isUserSafe(uid)) {
         delete this.settings.safeUsers[uid];
       }
       else {
         this.settings.safeUsers[uid] = {};
       }
-      this.saveSettings();
+      await this.saveSettings();
     }
 
-    loadSettings() {
+    async loadSettings() {
       try {
         this.settings = {
           safeUsers: {},
         };
-        const json = JSON.parse(GM_getValue(SETTING_KEY));
+        const json = JSON.parse(await GM.getValue(SETTING_KEY));
         if (json) {
           this.settings = Object.assign(this.settings, json);
         }
@@ -618,9 +629,9 @@
       }
     }
 
-    saveSettings() {
+    async saveSettings() {
       try {
-        GM_setValue(SETTING_KEY, JSON.stringify(this.settings));
+        await GM.setValue(SETTING_KEY, JSON.stringify(this.settings));
       }
       catch (e) {
         console.error(e);
