@@ -2,7 +2,7 @@
 
 PC 版 X のフォロワー覧でスパムの可能性があるアカウントを強調表示する Violentmonkey 用スクリプトです。
 
-フォロワー欄をパァーっとスクロールしながら怪しいアカウントを素早く見つけることを目的としています。
+フォロワー欄をパァーっとスクロールしながらスクリーニングするのを助けます。
 
 ![カバー画像](./images/cover.png)
 
@@ -13,23 +13,26 @@ PC 版 X のフォロワー覧でスパムの可能性があるアカウント�
 
 ## インストール方法
 
-1. Chrome または Firefox に [Violentmonkey](https://violentmonkey.github.io/) をインストールします。
+1. Chrome または Firefox に以下のいずれかの拡張機能をインストールします。
+    - [Greasemonkey](https://addons.mozilla.org/ja/firefox/addon/greasemonkey/) (Firefox)
+    - [Violentmonkey](https://violentmonkey.github.io/) (Chrome/Firefox)
+    - [Tampermonkey](https://www.tampermonkey.net/) (Chrome/Firefox)
 2. [こちらのリンク](https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
 
 ## 動かない場合
 
 ページをリロードしてみてください。
 
-フォロワー一覧以外のページから遷移したときに動かないことが多いような気がします。
+別のページからフォロワー一覧へ遷移したときに動いてくれないことが多いような気がします。
 
 ## 判定基準
+
+なんとなく以下のようなアカウントを強調表示します。
 
 - 金配り系
 - 投資系
 - エロ系
 - 出会い系
-
-NG ワードの追加依頼があれば [X でリプライ](https://twitter.com/shapoco/status/1858550973104529823) または [Issue](https://github.com/shapoco/x-spam-highlighter/issues) を起票ください。
 
 ## おまけ機能
 
