@@ -1,6 +1,6 @@
 # X Spam Highlighter
 
-PC 版 X のフォロワー覧でスパムの可能性があるアカウントを強調表示する Violentmonkey 用スクリプトです。
+PC 版 X のフォロワー覧でスパムの可能性があるアカウントを強調表示する UserScript です。
 
 フォロワー欄をパァーっとスクロールしながらスクリーニングするのを助けます。
 
@@ -14,8 +14,8 @@ PC 版 X のフォロワー覧でスパムの可能性があるアカウント�
 ## インストール方法
 
 1. Chrome または Firefox に以下のいずれかの拡張機能をインストールします。
-    - [Violentmonkey](https://violentmonkey.github.io/) (Chrome/Firefox)
     - [Tampermonkey](https://www.tampermonkey.net/) (Chrome/Firefox)
+    - [Violentmonkey](https://violentmonkey.github.io/) (Firefox)
     - [Greasemonkey](https://addons.mozilla.org/ja/firefox/addon/greasemonkey/) (Firefox)
 2. [こちらのリンク](https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
 
