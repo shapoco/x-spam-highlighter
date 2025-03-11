@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.2.103
+// @version     1.2.107
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -93,6 +93,7 @@
     { regexes: [/フォロワー[減へ]ってる/g], add: 10 },
     { regexes: [/フォロー(嬉|うれ)しい/g], add: 10 },
     { regexes: [/親と(喧嘩|けんか)した/g], add: 10 },
+    { regexes: [/ここだけのお楽しみ/g], add: 10 },
     { regexes: [/慰め/g], add: 10 },
     { regexes: [/18禁/g], add: 10 },
     { regexes: [/快楽/g], add: 10 },
@@ -268,7 +269,7 @@
         await this.loadSettings();
 
         const body = document.querySelector('body');
-        const observer = new MutationObserver(function (mutations) {
+        const observer = new MutationObserver((mutations) => {
           if (this.lastLocation != document.location.href) {
             this.lastLocation = document.location.href;
             this.followButtons = [];
