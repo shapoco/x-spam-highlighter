@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.2.107
+// @version     1.3.127
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -229,35 +229,12 @@
     return tmp.substring(1, tmp.length - 2);
   })();
 
-  // User ID と作成日時の関係
-  const USER_ID_DICT = [
-    {
-      18548500: new Date('2009-01-02').getTime(),
-      129095500: new Date('2010-04-03').getTime(),
-      341869500: new Date('2011-07-25').getTime(),
-      473422500: new Date('2012-01-25').getTime(),
-      1703770500: new Date('2013-08-27').getTime(),
-      2475285500: new Date('2014-05-03').getTime(),
-      3034548500: new Date('2015-02-21').getTime(),
-    },
-    {
-      793757834504765000: new Date('2016-11-02').getTime(),
-      831503904093315000: new Date('2017-02-14').getTime(),
-      1086585820939575000: new Date('2019-01-19').getTime(),
-      1332120443281685000: new Date('2020-11-27').getTime(),
-      1412250140430145000: new Date('2021-07-06').getTime(),
-      1518304543011785000: new Date('2022-04-25').getTime(),
-      1644487268177185000: new Date('2023-04-08').getTime(),
-      1745152119630445000: new Date('2024-01-11').getTime(),
-      1894161355206525000: new Date('2025-02-25').getTime(),
-    }
-  ];
-
   class XSpamHighlighter {
     constructor() {
       this.lastLocation = null;
       this.followButtons = [];
       this.followerListRoot = null;
+      this.mediaElems = [];
       this.finishedElems = [];
       this.settings = {
         safeUsers: {},
@@ -274,6 +251,7 @@
             this.lastLocation = document.location.href;
             this.followButtons = [];
             this.followerListRoot = null;
+            this.mediaElems = [];
             this.finishedElems = [];
           }
         });
@@ -285,10 +263,14 @@
       };
 
       this.intervalId = window.setInterval(() => {
-        // フォロワー一覧でのみ処理を実施
-        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/\w*(following|followers)/)) {
+        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/(following|followers)/)) {
+          // フォロワー一覧
           this.scanUsers();
           this.highlightLocks();
+        }
+        else if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/media/)) {
+          // メディア一覧
+          this.scanMedia();
         }
       }, PROCESS_INTERVAL_MS);
     }
@@ -342,62 +324,16 @@
       let elapsedStr = 'Unknown';
       try {
         if (!m) return false;
-        const uidStr = m[1];
-        const uidNumber = parseFloat(uidStr);
-
-        let id0 = -1, id1 = -1;
-        let date0 = -1, date1 = -1;
-
-        // USER_ID_DICT1 からキーが最も近い2要素を得る
-        for (let i = 0; i < USER_ID_DICT.length; i++) {
-          const dict = USER_ID_DICT[i];
-          let logId0 = -1, logDate0 = -1, diff0 = Number.MAX_VALUE;
-          let logId1 = -1, logDate1 = -1, diff1 = Number.MAX_VALUE;
-          for (let key in dict) {
-            const keyUid = parseFloat(key);
-            const diff = Math.abs(uidNumber - keyUid);
-            if (diff < diff0) {
-              logId1 = logId0;
-              logDate1 = logDate0;
-              logId0 = keyUid;
-              logDate0 = dict[key];
-              diff1 = diff0;
-              diff0 = diff;
-            }
-            else if (diff < diff1) {
-              logId1 = keyUid;
-              logDate1 = dict[key];
-              diff1 = diff;
-            }
-          }
-
-          if (logId0 >= 0 && logId1 >= 0) {
-            id0 = logId0; date0 = logDate0;
-            id1 = logId1; date1 = logDate1;
-            if (logId0 <= uidNumber && uidNumber < logId1) break;
-          }
-        }
-
-        const estTime = date0 + (date1 - date0) * (uidNumber - id0) / (id1 - id0);
-
-        const dateStr = new Date(estTime).toLocaleDateString();
-
-        const days = (new Date().getTime() - estTime) / (1000 * 60 * 60 * 24);
-        const years = days / 365.2425;
-        const month = years * 12;
-        const elapsedStr =
-          days < 1 ? '1日以内' :
-            month < 1 ? `${Math.round(days)}日前` :
-              years < 1 ? `${Math.round(month * 10) / 10}ヶ月前` :
-                `${Math.round(years * 10) / 10}年前`;
-
+        const uid = m[1];
+        const estTime = esitimateTimeFromId(uid);
         const age = document.createElement('span');
-        age.textContent = elapsedStr;
-        age.title = `推定作成日: ${dateStr}`;
+        age.textContent = prettyDate(estTime);
+        age.title = `推定作成日: ${new Date(estTime).toLocaleDateString()}\n${APP_NAME} が User ID から推定`;
 
         const MONTH_MIN = 3;
         const MONTH_MAX = 6;
         let alpha = 0;
+        const month = (new Date().getTime() - estTime) / (1000 * 86400 * (365.2425 / 12));
         if (month < MONTH_MAX) {
           alpha = Math.min(1, (MONTH_MAX - month) / (MONTH_MAX - MONTH_MIN));
           age.style.fontWeight = 'bold';
@@ -416,7 +352,7 @@
         safeButton.style.padding = '0';
         safeButton.style.margin = '0';
         const updateSafeButton = () => {
-          if (this.isUserSafe(uidStr)) {
+          if (this.isUserSafe(uid)) {
             safeButton.textContent = '💚';
             safeButton.style.opacity = 1;
             safeButton.title = 'このユーザの安全マークを解除する';
@@ -428,7 +364,7 @@
           }
         };
         safeButton.addEventListener('click', async () => {
-          await this.toggleSafeUser(uidStr);
+          await this.toggleSafeUser(uid);
           updateSafeButton();
         });
         updateSafeButton();
@@ -603,6 +539,32 @@
       }
     }
 
+    // メディア一覧のスキャン
+    scanMedia() {
+      const links = Array.from(document.querySelectorAll('a'));
+      for (let link of links) {
+        const m = link.href.match(/\/\w+\/status\/(\d+)\/(photo|video)\//);
+        if (!m) continue;
+        if (this.finishedElems.includes(link)) continue;
+        // URLから作成日時を推定
+        const estTime = esitimateTimeFromId(m[1]);
+        const age = document.createElement('span');
+        age.textContent = prettyDate(estTime);
+        age.title = `推定投稿日: ${new Date(estTime).toLocaleDateString()}\n${APP_NAME} が URL から推定`;
+        age.style.position = 'absolute';
+        age.style.right = '5px';
+        age.style.top = '5px';
+        age.style.padding = '0px 10px';
+        age.style.fontSize = '12px';
+        age.style.color = 'white';
+        age.style.borderRadius = '5px';
+        age.style.backgroundColor = '#608';
+        age.style.opacity = 0.75;
+        link.parentElement.appendChild(age);
+        this.finishedElems.push(link);
+      }
+    }
+
     isUserSafe(uid) {
       return uid in this.settings.safeUsers;
     }
@@ -662,6 +624,75 @@
       }
     }
     return '';
+  }
+
+  // User ID と作成日時の関係
+  const USER_ID_DICT = [
+    {
+      18548500: new Date('2009-01-02').getTime(),
+      129095500: new Date('2010-04-03').getTime(),
+      341869500: new Date('2011-07-25').getTime(),
+      473422500: new Date('2012-01-25').getTime(),
+      1703770500: new Date('2013-08-27').getTime(),
+      2475285500: new Date('2014-05-03').getTime(),
+      3034548500: new Date('2015-02-21').getTime(),
+    },
+    {
+      793757834504765000: new Date('2016-11-02').getTime(),
+      831503904093315000: new Date('2017-02-14').getTime(),
+      1086585820939575000: new Date('2019-01-19').getTime(),
+      1332120443281685000: new Date('2020-11-27').getTime(),
+      1412250140430145000: new Date('2021-07-06').getTime(),
+      1518304543011785000: new Date('2022-04-25').getTime(),
+      1644487268177185000: new Date('2023-04-08').getTime(),
+      1745152119630445000: new Date('2024-01-11').getTime(),
+      1894161355206525000: new Date('2025-02-25').getTime(),
+    }
+  ];
+
+  // UserId から作成日時を推定
+  function esitimateTimeFromId(uidStr) {
+    const uid = parseFloat(uidStr);
+    let id0 = -1, id1 = -1;
+    let date0 = -1, date1 = -1;
+    for (let i = 0; i < USER_ID_DICT.length; i++) {
+      const dict = USER_ID_DICT[i];
+      let logId0 = -1, logDate0 = -1, diff0 = Number.MAX_VALUE;
+      let logId1 = -1, logDate1 = -1, diff1 = Number.MAX_VALUE;
+      for (let key in dict) {
+        const keyUid = parseFloat(key);
+        const diff = Math.abs(uid - keyUid);
+        if (diff < diff0) {
+          logId1 = logId0;
+          logDate1 = logDate0;
+          logId0 = keyUid;
+          logDate0 = dict[key];
+          diff1 = diff0;
+          diff0 = diff;
+        }
+        else if (diff < diff1) {
+          logId1 = keyUid;
+          logDate1 = dict[key];
+          diff1 = diff;
+        }
+      }
+      if (logId0 >= 0 && logId1 >= 0) {
+        id0 = logId0; date0 = logDate0;
+        id1 = logId1; date1 = logDate1;
+        if (logId0 <= uid && uid < logId1) break;
+      }
+    }
+    return date0 + (date1 - date0) * (uid - id0) / (id1 - id0);
+  }
+
+  function prettyDate(t) {
+    const days = (new Date().getTime() - t) / (1000 * 86400);
+    const years = days / 365.2425;
+    const month = years * 12;
+    if (days < 1) return '1日以内';
+    if (month < 1) return `${Math.round(days)}日前`;
+    if (years < 1) return `${Math.round(month * 10) / 10}ヶ月前`;
+    return `${Math.round(years * 10) / 10}年前`;
   }
 
   function toHiragana(orig) {
