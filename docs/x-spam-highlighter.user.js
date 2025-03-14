@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.127
+// @version     1.3.132
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -263,7 +263,7 @@
       };
 
       this.intervalId = window.setInterval(() => {
-        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/(following|followers)/)) {
+        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/(verified_followers|followers|following)/)) {
           // フォロワー一覧
           this.scanUsers();
           this.highlightLocks();
@@ -353,12 +353,16 @@
         safeButton.style.margin = '0';
         const updateSafeButton = () => {
           if (this.isUserSafe(uid)) {
-            safeButton.textContent = '💚';
+            safeButton.textContent = '🛡️';
+            safeButton.style.filter = '';
+            safeButton.style.transform = 'scale(1.25)';
             safeButton.style.opacity = 1;
             safeButton.title = 'このユーザの安全マークを解除する';
           }
           else {
-            safeButton.textContent = '🩶';
+            safeButton.textContent = '🛡️';
+            safeButton.style.filter = 'grayscale(100%)';
+            safeButton.style.transform = 'scale(1.25)';
             safeButton.style.opacity = 0.5;
             safeButton.title = 'このユーザを安全としてマークする';
           }
@@ -534,7 +538,7 @@
         if (svg.style.fill == COLOR) continue;
         svg.style.fill = COLOR;
         svg.style.filter = 'drop-shadow(0 0 5px rgba(192, 64, 255, 0.75))';
-        svg.style.transform = 'scale(1.2)';
+        svg.style.transform = 'scale(1.25)';
         svg.title = `(${APP_NAME} による強調表示)`;
       }
     }
