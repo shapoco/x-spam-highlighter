@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.132
+// @version     1.3.161
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -239,6 +239,8 @@
       this.settings = {
         safeUsers: {},
       };
+      /** @type {Element} */
+      this.tstElem = null;
     }
 
     start() {
@@ -378,6 +380,7 @@
         div.style.right = '10px';
         div.style.top = '-20px';
         div.style.fontSize = '12px';
+        div.style.whiteSpace = 'nowrap';
         div.appendChild(age);
         div.appendChild(document.createTextNode(' | '));
         div.appendChild(safeButton);
@@ -410,6 +413,40 @@
       // 処理済みの要素は除く
       if (this.finishedElems.includes(elm)) return;
       this.finishedElems.push(elm);
+
+      if (!this.tstElem) {
+        this.tstElem = elm;
+        let element = elm.querySelectorAll('.css-175oi2r .r-1pi2tsx .r-13qz1uu')[1];
+        for (let i = 0; i < 0; i++) {
+          element = element.parentElement;
+        }
+        window.tstElem = element;
+        //element.style.backgroundColor = 'red';
+        //triggerEvent(element, 'mouseover');
+
+        const testButton = document.createElement('button');
+        testButton.style.position = 'fixed';
+        testButton.style.top = '100px';
+        testButton.style.left = '20px';
+        testButton.style.zIndex = 9999;
+        testButton.style.backgroundColor = 'yellow';
+        testButton.innerHTML = 'trig';
+        document.body.appendChild(testButton);
+        testButton.addEventListener('click', async () => {
+          element.style.backgroundColor = 'red';
+          console.log('mousemove');
+          triggerEvent(element, 'mousemove');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log('touchmove');
+          triggerEvent(element, 'touchmove');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log('pointermove');
+          triggerEvent(element, 'pointermove');
+          element.style.backgroundColor = 'transparent';
+          element = element.parentElement;
+          console.log(element.tagName);
+        });
+      }
 
       // ユーザ ID を取得
       let uid = null;
@@ -628,6 +665,16 @@
       }
     }
     return '';
+  }
+
+  /**
+   * @param {Element} elem 
+   * @param {string} event 
+   * @returns {boolean}
+   */
+  function triggerEvent(elem, event) {
+    const evt = new Event(event, { bubbles: true, cancelable: false });
+    return elem.dispatchEvent(evt);
   }
 
   // User ID と作成日時の関係

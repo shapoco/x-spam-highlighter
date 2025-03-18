@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.132
+// @version     1.3.161
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -378,6 +378,7 @@
         div.style.right = '10px';
         div.style.top = '-20px';
         div.style.fontSize = '12px';
+        div.style.whiteSpace = 'nowrap';
         div.appendChild(age);
         div.appendChild(document.createTextNode(' | '));
         div.appendChild(safeButton);
