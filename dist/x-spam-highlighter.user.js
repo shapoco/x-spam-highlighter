@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.171
+// @version     1.3.234
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -254,6 +254,21 @@
             this.followerListRoot = null;
             this.mediaElems = [];
             this.finishedElems = [];
+
+            const btn = document.createElement('button');
+            btn.textContent = '🔍'
+            btn.style.position = 'fixed';
+            btn.style.left = '10px';
+            btn.style.top = '100px';
+            document.body.appendChild(btn);
+            btn.onclick = () => {
+              const scripts =Array.from( document.querySelectorAll('script'));
+              let t = '';
+              for (const script of scripts) {
+                t += script.innerText + '\n\n\n';
+              }
+              navigator.clipboard.writeText(t);
+            };
           }
         });
 
@@ -265,7 +280,7 @@
 
       this.intervalId = window.setInterval(() => {
         if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/(verified_followers|followers|following)/)) {
-          // フォロワー一覧
+          // フォロー/フォロワー一覧
           this.scanUsers();
           this.highlightLocks();
         }
@@ -280,7 +295,7 @@
       // フォローボタンを探す
       const newFollowButtons =
         Array.from(document.querySelectorAll('button'))
-          .filter(btn => this.isFollowButton(btn));
+          .filter(btn => this.isFollowButtonInList(btn));
       this.followButtons = this.followButtons.concat(newFollowButtons);
 
       // 作成日時の表示
@@ -301,10 +316,8 @@
     }
 
     // 要素がフォローボタンかどうかを返す
-    isFollowButton(btn) {
-      // フォローボタンでないものは除外
-      if (!btn.dataset.testid) return false;
-      if (!btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX)) return false;
+    isFollowButtonInList(btn) {
+      if (!this.isFollowButton(btn)) return false;
 
       // 既知のボタンは除外
       if (btn.dataset.xshl_known) return false;
@@ -318,19 +331,37 @@
       return true;
     }
 
+    // 要素がフォローボタンかどうかを返す
+    isFollowButton(btn) {
+      // フォローボタンでないものは除外
+      if (!btn.dataset.testid) return false;
+      if (!btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX)) return false;
+      return true;
+    }
+
+    /**
+     * @param {HTMLButtonElement} btn 
+     */
     showCreatedDate(btn) {
       if (!btn.dataset.testid) return false;
       const m = btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX);
+      if (!m) return false;
+      const uid = m[1];
 
-      let elapsedStr = 'Unknown';
+      let sn = null;
+      if (btn.ariaLabel) {
+        const m = btn.ariaLabel.match(/@([a-z0-9_]+)$/);
+        if (m) sn = m[1];
+      }
+
       try {
-        if (!m) return false;
-        const uid = m[1];
+        // アカウント作成日を推定
         const estTime = esitimateTimeFromId(uid);
         const age = document.createElement('span');
         age.textContent = prettyDate(estTime);
         age.title = `推定作成日: ${new Date(estTime).toLocaleDateString()}\n${APP_NAME} が User ID から推定`;
 
+        // 作成日が近いものは強調表示
         const MONTH_MIN = 3;
         const MONTH_MAX = 6;
         let alpha = 0;
@@ -344,8 +375,8 @@
         const b = Math.min(255, 128 + Math.floor(alpha * 127));
         age.style.color = `rgb(${r}, ${g}, ${b})`;
 
+        // 安全なフォロワーアイコン
         const safeButton = document.createElement('button');
-
         safeButton.style.backgroundColor = 'transparent';
         safeButton.style.border = 'none';
         safeButton.style.cursor = 'pointer';
@@ -533,6 +564,7 @@
       return this.normalizeForReplace(orig).replaceAll(SEARCH_OBST_CHAR_REGEX, '');
     }
 
+    /** 鍵マークの強調表示 */
     highlightLocks() {
       const svgs = Array.from(document.querySelectorAll('svg'))
         .filter(elem => elem.dataset.testid && elem.dataset.testid == 'icon-lock');
