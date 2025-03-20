@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.234
+// @version     1.3.235
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -254,21 +254,6 @@
             this.followerListRoot = null;
             this.mediaElems = [];
             this.finishedElems = [];
-
-            const btn = document.createElement('button');
-            btn.textContent = '🔍'
-            btn.style.position = 'fixed';
-            btn.style.left = '10px';
-            btn.style.top = '100px';
-            document.body.appendChild(btn);
-            btn.onclick = () => {
-              const scripts =Array.from( document.querySelectorAll('script'));
-              let t = '';
-              for (const script of scripts) {
-                t += script.innerText + '\n\n\n';
-              }
-              navigator.clipboard.writeText(t);
-            };
           }
         });
 
