@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.162
+// @version     1.3.171
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -94,6 +94,7 @@
     { regexes: [/フォロー(嬉|うれ)しい/g], add: 10 },
     { regexes: [/親と(喧嘩|けんか)した/g], add: 10 },
     { regexes: [/ここだけのお楽しみ/g], add: 10 },
+    { regexes: [/胸の大きさ/g], add: 10 },
     { regexes: [/慰め/g], add: 10 },
     { regexes: [/18禁/g], add: 10 },
     { regexes: [/快楽/g], add: 10 },
@@ -116,7 +117,7 @@
     { regexes: [/役に[立た]ちた(い|くて)/g], add: 10 },
     { regexes: [/\bFIRE\b/g], add: 10 },
     { regexes: [/[見み][せ●〇★☆][合あ]い|[見み]せ([合あ]い)?っこ/g], add: 10 },
-    { regexes: [/フォロバ|相互フォロー/g, /(💯|100)[%％]?|支援/g], add: 10 },
+    { regexes: [/フォロバ|フォローバック|相互フォロー/g, /(💯|100)[%％]?|支援/g], add: 10 },
     { regexes: [/[出で][会あ](い|える)|会える?/g], add: 10 },
     { regexes: [/定期可能/g], add: 10 },
     { regexes: [/サロン/g], add: 10 },
@@ -141,7 +142,7 @@
     { regexes: [/すぐお?金になる/g], add: 10 },
     { regexes: [/アルバイト/g, /給与|[日時]給|日払い/g], add: 10 },
     { regexes: [/勤務時間は制限ありません/g], add: 10 },
-    { regexes: [/夜のお店|キャバ嬢/g], add: 10 },
+    { regexes: [/夜のお店|キャバ嬢|ホスト|朝ホスト?/g], add: 10 },
     { regexes: [/彼[氏女]|カレシ|カノジョ|[男女]友(達|だち)/g, /[無な]し|[居い]る|欲し/g], add: 10 },
     { regexes: [REGEX_GRADE, REGEX_LONELY], add: 10 },
     { regexes: [REGEX_LIVING_ALONE, REGEX_LONELY], add: 10 },
@@ -436,7 +437,8 @@
 
         // ルールに定義された全ての正規表現にマッチするか確認する
         rule.regexes.forEach(regex => {
-          const matches = text.match(regex);
+          const regexMod = new RegExp(regex.source, 'i');
+          const matches = text.match(regexMod);
           if (matches) {
             matches.forEach(m => {
               if (!wordsToBeHighlighted.includes(m) && !matchedWords.includes(m)) {
@@ -589,10 +591,11 @@
         this.settings = {
           safeUsers: {},
         };
-        const json = JSON.parse(await GM.getValue(SETTING_KEY));
-        if (json) {
-          this.settings = Object.assign(this.settings, json);
-        }
+        const jsonStr = await GM.getValue(SETTING_KEY);
+        if (!jsonStr) return;
+        const json = JSON.parse(jsonStr);
+        if (!json) return;
+        this.settings = Object.assign(this.settings, json);
       }
       catch (e) {
         console.error(e);
