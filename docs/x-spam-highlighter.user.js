@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.236
+// @version     1.3.239
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -310,8 +310,10 @@
 
       // ビューポートの端にある要素は除外
       const vw = window.innerWidth;
+      const xMin = (vw - 600) / 2;
+      const xMax = (vw + 600) / 2;
       const rect = btn.getBoundingClientRect();
-      if (rect.right < vw / 2 || vw * 3 / 4 < rect.left) return false;
+      if (rect.left < xMin || xMax < rect.right) return false;
 
       return true;
     }
@@ -335,7 +337,7 @@
 
       let sn = null;
       if (btn.ariaLabel) {
-        const m = btn.ariaLabel.match(/@([a-z0-9_]+)$/);
+        const m = btn.ariaLabel.match(/@([a-z0-9_]+)$/i);
         if (m) sn = m[1];
       }
 
@@ -672,6 +674,7 @@
       1644487268177185000: new Date('2023-04-08').getTime(),
       1745152119630445000: new Date('2024-01-11').getTime(),
       1894161355206525000: new Date('2025-02-25').getTime(),
+      1900737971101595000: new Date('2025-03-15').getTime(),
     }
   ];
 
