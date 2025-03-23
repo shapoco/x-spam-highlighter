@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.381
+// @version     1.3.382
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -686,6 +686,7 @@
       if (isNull(containerSpan, 'Wrapper element of created date')) return;
 
       if (containerSpan.dataset.xshl_known && containerSpan.dataset.xshl_known == user.uid) return;
+      containerSpan.dataset.xshl_known = user.uid;
 
       let textSpan = null;
       for (let span of Array.from(containerSpan.querySelectorAll('span'))) {
