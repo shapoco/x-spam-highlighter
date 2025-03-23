@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.363
+// @version     1.3.381
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -18,6 +18,7 @@
   const DEBUG_MODE = true;
 
   const APP_NAME = 'X Spam Highlighter';
+  const SHORT_APP_NAME = 'XSHL';
   const SETTING_KEY = 'xsphl_settings';
 
   const PROCESS_INTERVAL_MS = 300;
@@ -251,7 +252,7 @@
         const body = document.querySelector('body');
         const observer = new MutationObserver((mutations) => {
           if (this.lastLocation != document.location.href) {
-            if (DEBUG_MODE) console.log('Page changed');
+            debugLog(`Page changed`);
             this.lastLocation = document.location.href;
             this.mediaElems = [];
             this.finishedElems = [];
@@ -282,7 +283,6 @@
             this.scanMedia();
           }
         }
-
       }, PROCESS_INTERVAL_MS);
     }
 
@@ -304,7 +304,7 @@
 
         if (user.readFromHtml(div)) {
           div.dataset.xshl_known = true;
-          this.showCreatedDate(user);
+          this.showEstimatedCreatedDate(user);
           this.highlightSpamKeywords(user);
         }
       }
@@ -313,15 +313,15 @@
     /**
      * @param {UserInfo} user 
      */
-    showCreatedDate(user) {
-      if (!user.followButton) return;
+    showEstimatedCreatedDate(user) {
+      if (isNull(user.followButton, `follow button for @${user.sn}`)) return;
 
       try {
         // アカウント作成日を推定
         const estTime = esitimateTimeFromId(user.uid);
         const age = document.createElement('span');
         age.textContent = prettyDate(estTime);
-        age.title = `推定作成日: ${new Date(estTime).toLocaleDateString()}\n${APP_NAME} が User ID から推定`;
+        age.title = `推定作成日: ${new Date(estTime).toLocaleDateString()}\nby ${APP_NAME}`;
 
         // 作成日が近いものは強調表示
         const MONTH_MIN = 3;
@@ -348,7 +348,7 @@
         safeButton.textContent = '🛡️';
         const updateSafeButton = () => {
           if (this.isUserSafe(user.uid)) {
-            safeButton.style.filter = '';
+            safeButton.style.filter = 'drop-shadow(0 0 5px rgba(0, 255, 0, 0.75))';
             safeButton.style.transform = 'scale(1.25)';
             safeButton.style.opacity = 1;
             safeButton.title = 'このユーザの安全マークを解除する';
@@ -380,7 +380,7 @@
         user.followButton.parentElement.appendChild(div);
       }
       catch (e) {
-        console.error(e);
+        debugLog(e);
       }
     }
 
@@ -396,20 +396,16 @@
         for (let i = 0; i < 6 && !!parent.parentElement; i++) {
           parent = parent.parentElement;
         }
-        if (parent) {
+        if (!isNull(parent, `Parent of follow button for @${user.sn}`)) {
           const div = document.createElement('div');
           div.textContent = '(空のプロフィール)';
+          div.title = `by ${APP_NAME}`;
           div.style.margin = '5px 0px 0px 50px';
           div.style.padding = '2px 10px';
           div.style.backgroundColor = isSafe ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 255, 0, 0.5)';
           div.style.borderRadius = '5px';
           div.style.opacity = 0.5;
           parent.appendChild(div);
-        }
-        else {
-          if (DEBUG_MODE) {
-            console.log(`parent of followButton not found (@${user.sn})`);
-          }
         }
       }
 
@@ -466,6 +462,10 @@
       user.containerDiv.style.backgroundColor = `rgba(255, 0, 0, ${alpha})`;
     }
 
+    /**
+     * @param {HTMLElement} elm 
+     * @param {string} kwd 
+     */
     highlightKeyword(elm, kwd) {
       const children = Array.from(elm.childNodes);
       children.forEach(child => {
@@ -475,6 +475,7 @@
           if (this.normalizeForHitTest(childText).includes(kwd)) {
             const span = document.createElement('span');
             span.innerHTML = this.replaceTextContent(childText, kwd);
+            span.title = `by ${APP_NAME}`;
             const frag = document.createDocumentFragment();
             frag.appendChild(span);
             child.parentNode.replaceChild(frag, child);
@@ -495,6 +496,11 @@
       });
     }
 
+    /**
+     * @param {string} text 
+     * @param {string} kwd 
+     * @returns {string}
+     */
     replaceTextContent(text, kwd) {
       // 検索用に正規化
       const normText = this.normalizeForReplace(text);
@@ -517,6 +523,10 @@
       return html;
     }
 
+    /**
+     * @param {string} orig 
+     * @returns {string}
+     */
     normalizeForReplace(orig) {
       var ret = toNarrow(toHiragana(orig))
         .replaceAll(/[―─]/g, 'ー');
@@ -524,6 +534,10 @@
       return ret;
     }
 
+    /**
+     * @param {string} orig 
+     * @returns {string}
+     */
     normalizeForHitTest(orig) {
       return this.normalizeForReplace(orig).replaceAll(SEARCH_OBST_CHAR_REGEX, '');
     }
@@ -538,11 +552,11 @@
         svg.style.fill = COLOR;
         svg.style.filter = 'drop-shadow(0 0 5px rgba(192, 64, 255, 0.75))';
         svg.style.transform = 'scale(1.25)';
-        svg.title = `(${APP_NAME} による強調表示)`;
+        svg.title = `強調表示 by ${APP_NAME}`;
       }
     }
 
-    // プロフィールページのスキャン
+    /** プロフィールページのスキャン */
     scanProfile() {
       const main = document.querySelector('main');
       if (!main) return;
@@ -555,9 +569,11 @@
       if (!user.readFromJson(sn)) return;
 
       this.showNumberOfPost(user, main);
+      this.showCreatedDate(user, main);
     }
 
     /**
+     * フォロー数/フォロワー数/ポスト数を正確に表示する
      * @param {UserInfo} user
      * @param {HTMLElement} main 
      */
@@ -574,14 +590,8 @@
       };
       const followingLink = findLink(REGEX_NUM_FOLLOWINGS);
       const followerLink = findLink(REGEX_NUM_FOLLOWERS);
-      if (!followingLink) {
-        if (DEBUG_MODE) console.log('Following link not found');
-        return;
-      }
-      if (!followerLink) {
-        if (DEBUG_MODE) console.log('Follower link not found');
-        return;
-      }
+      if (isNull(followingLink, 'Following link')) return;
+      if (isNull(followerLink, 'Follower link')) return;
 
       // ページ遷移しても要素が削除されないので uid で変化点検出する
       if (followingLink.dataset.xshl_known == user.uid && followerLink.dataset.xshl_known == user.uid) {
@@ -600,7 +610,11 @@
         const oldNumber = m[1];
         const spans = Array.from(link.querySelectorAll('span')).filter(span => span.innerHTML == oldNumber);
         if (spans.length == 0) return;
-        spans[0].textContent = formatNumber(newNumber);
+        const textSpan = spans[0];
+        const oldStr = textSpan.textContent;
+        const newStr = formatNumber(newNumber);
+        spans[0].textContent = newStr;
+        debugLog(`Number of followings/followers for @${user.sn} replaced: '${oldStr}' -> '${newStr}'`);
         computedStyle = window.getComputedStyle(spans[0]);
         link.title = `正確な値 by ${APP_NAME}`;
       };
@@ -608,13 +622,10 @@
       updateLink(followerLink, REGEX_NUM_FOLLOWERS, user.numFollowers);
 
       const parent = findCommonParent(followingLink, followerLink, 5);
-      if (!parent) {
-        if (DEBUG_MODE) console.log('Parent not found');
-        return;
-      }
+      if (isNull(parent, `Parent of links of following/followers for @${user.sn}`)) return;
 
       // ポスト数を表示
-      if (user.numPosts !== null) {
+      if (!isNull(user.numPosts, `Number of posts for @${user.sn}`)) {
         let postsPerDay = '';
         // 投稿頻度
         if (user.numPosts > 0 && user.created) {
@@ -629,13 +640,13 @@
         let unitElem = document.querySelector('#xshlNumPosts_unit');
         if (!button) {
           button = document.createElement('div');
+          button.title = `リポスト以外の投稿を検索 by ${APP_NAME}`;
           button.id = 'xshlNumPosts';
           button.display = 'inline';
           button.style.marginLeft = '20px';
           button.style.fontFamily = computedStyle.fontFamily;
           button.style.fontSize = computedStyle.fontSize;
           button.style.cursor = 'pointer';
-          button.title = `リポスト以外の投稿を検索 by ${APP_NAME}`;
           parent.appendChild(button);
         }
         if (!numberElem) {
@@ -658,11 +669,38 @@
         button.addEventListener('click', () => { window.open(`https://x.com/search?q=from%3A${user.sn}`, '_blank'); });
         button.addEventListener('mouseover', () => { button.style.textDecoration = 'underline'; });
         button.addEventListener('mouseout', () => { button.style.textDecoration = 'none'; });
-    }
-      else {
-        if (DEBUG_MODE) console.log('Number of posts not found');
-      }
 
+        debugLog(`Number of posts added: ${button.textContent}`);
+      }
+    }
+
+    /**
+     * アカウントの作成日を正確に表示する
+     * @param {UserInfo} user
+     * @param {HTMLElement} main 
+     */
+    showCreatedDate(user, main) {
+      if (isNull(user.created, `Created date for @${user.sn}`)) return;
+
+      const containerSpan = main.querySelector('span[data-testid="UserJoinDate"]');
+      if (isNull(containerSpan, 'Wrapper element of created date')) return;
+
+      if (containerSpan.dataset.xshl_known && containerSpan.dataset.xshl_known == user.uid) return;
+
+      let textSpan = null;
+      for (let span of Array.from(containerSpan.querySelectorAll('span'))) {
+        if (span.textContent == span.innerHTML) {
+          textSpan = span;
+          break;
+        }
+      }
+      if (isNull(textSpan, 'Text span of created date')) return;
+
+      const oldStr = textSpan.textContent;
+      const newStr = `${new Date(user.created).toLocaleDateString()} (${prettyDate(user.created)}) からXを利用中`;
+      textSpan.textContent = newStr;
+      textSpan.title = `正確な値 by ${APP_NAME}`;
+      debugLog(`Created date was replaced: '${oldStr}' -> '${newStr}'`);
     }
 
     // メディア一覧のスキャン
@@ -676,7 +714,7 @@
         const estTime = esitimateTimeFromId(m[1]);
         const age = document.createElement('span');
         age.textContent = prettyDate(estTime);
-        age.title = `推定投稿日: ${new Date(estTime).toLocaleDateString()}\n${APP_NAME} が URL から推定`;
+        age.title = `推定投稿日: ${new Date(estTime).toLocaleDateString()}\nby ${APP_NAME}`;
         age.style.position = 'absolute';
         age.style.right = '5px';
         age.style.top = '5px';
@@ -717,7 +755,7 @@
         this.settings = Object.assign(this.settings, json);
       }
       catch (e) {
-        console.error(e);
+        debugLog(e);
       }
     }
 
@@ -726,7 +764,7 @@
         await GM.setValue(SETTING_KEY, JSON.stringify(this.settings));
       }
       catch (e) {
-        console.error(e);
+        debugLog(e);
       }
     }
   }
@@ -769,7 +807,7 @@
         this.followButton = btns[0];
       }
       else {
-        if (DEBUG_MODE) console.log(`Follow button not found (btns.length=${btns.length})`);
+        debugLog(`Follow button not found (btns.length=${btns.length})`);
       }
 
       // フォローボタンの属性から User ID を取得
@@ -879,7 +917,7 @@
         }
       }
       catch (ex) {
-        console.error(`${APP_NAME}: ${ex}`);
+        debugLog(ex);
       }
 
       return true;
@@ -1018,6 +1056,28 @@
     const ret = orig.replaceAll(/[Ａ-Ｚａ-ｚ０-９]/g, m => String.fromCharCode(m.charCodeAt(0) - 0xFEE0));
     console.assert(orig.length == ret.length);
     return ret;
+  }
+
+  /**
+   * @param {Object} obj 
+   * @param {string} name 
+   * @returns {boolean}
+   */
+  function isNull(obj, name) {
+    const failed = (obj === null) || (obj === undefined);
+    if (failed) debugLog(`${name} is null.`);
+    return failed;
+  }
+
+  function debugLog(msg) {
+    if (typeof msg === 'string' || typeof msg === 'number' || typeof msg === 'boolean') {
+      if (DEBUG_MODE) {
+        console.log(`[${SHORT_APP_NAME}] ${msg}`);
+      }
+    }
+    else {
+      console.error(`[${SHORT_APP_NAME}] ${msg}`);
+    }
   }
 
   /** 
