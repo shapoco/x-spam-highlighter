@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.382
+// @version     1.3.389
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -307,6 +307,10 @@
           this.showEstimatedCreatedDate(user);
           this.highlightSpamKeywords(user);
         }
+        else if (!user.followButton) {
+          // フォローボタンが見つからない場合は諦める
+          div.dataset.xshl_known = true;
+        }
       }
     }
 
@@ -392,21 +396,19 @@
 
       if (!user.descDiv || user.descDiv.textContent.trim().length == 0) {
         // プロフィールが空のユーザを強調表示
-        let parent = user.followButton;
-        for (let i = 0; i < 6 && !!parent.parentElement; i++) {
-          parent = parent.parentElement;
-        }
-        if (!isNull(parent, `Parent of follow button for @${user.sn}`)) {
-          const div = document.createElement('div');
-          div.textContent = '(空のプロフィール)';
-          div.title = `by ${APP_NAME}`;
-          div.style.margin = '5px 0px 0px 50px';
-          div.style.padding = '2px 10px';
-          div.style.backgroundColor = isSafe ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 255, 0, 0.5)';
-          div.style.borderRadius = '5px';
-          div.style.opacity = 0.5;
-          parent.appendChild(div);
-        }
+        const div = document.createElement('div');
+        div.textContent = '(空のプロフィール)';
+        div.title = `by ${APP_NAME}`;
+        div.style.position = 'absolute';
+        div.style.left = '50%';
+        div.style.top = '50%';
+        div.style.transform = 'translate(-50%, -50%)';
+        div.style.padding = '5px';
+        div.style.backgroundColor = isSafe ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 255, 0, 0.5)';
+        div.style.borderRadius = '5px';
+        div.style.opacity = 0.5;
+        div.style.fontSize = '12px';
+        user.containerDiv.appendChild(div);
       }
 
       let elms = [];
@@ -807,9 +809,7 @@
       if (btns.length == 1) {
         this.followButton = btns[0];
       }
-      else {
-        debugLog(`Follow button not found (btns.length=${btns.length})`);
-      }
+      isNull(this.followButton, 'Follow button');
 
       // フォローボタンの属性から User ID を取得
       if (this.followButton && this.followButton.dataset.testid) {
