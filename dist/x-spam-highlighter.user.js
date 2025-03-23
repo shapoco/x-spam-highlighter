@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.408
+// @version     1.3.409
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -658,7 +658,7 @@
 
         if (postsPerDay !== 0) {
           const alpha = Math.round(100 * Math.max(0, Math.min(1, postsPerDay / 0.3)));
-          button.style.color = '#f08';
+          button.style.color = '#c0f';
           button.style.filter = `grayscale(${alpha}%)`;
         }
 
