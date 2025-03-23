@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.277
+// @version     1.3.363
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -237,6 +237,8 @@
       this.lastLocation = null;
       this.mediaElems = [];
       this.finishedElems = [];
+      this.users = {};
+      this.nextContainerDataId = 0;
       this.settings = {
         safeUsers: {},
       };
@@ -249,9 +251,11 @@
         const body = document.querySelector('body');
         const observer = new MutationObserver((mutations) => {
           if (this.lastLocation != document.location.href) {
+            if (DEBUG_MODE) console.log('Page changed');
             this.lastLocation = document.location.href;
             this.mediaElems = [];
             this.finishedElems = [];
+            this.users = {};
           }
         });
 
@@ -262,15 +266,23 @@
       };
 
       this.intervalId = window.setInterval(() => {
-        if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/(verified_followers|followers|following)/)) {
+        const mFollowList = document.location.href.match(/^https:\/\/x\.com\/\w+\/(verified_followers|followers_you_follow|followers|following)/);
+        const mProfile = document.location.href.match(/^https:\/\/x\.com\/(\w+)(\/(with_replies|media))?\/?(\?.+)?$/);
+        if (mFollowList) {
           // フォロー/フォロワー一覧
           this.scanUsers();
           this.highlightLocks();
         }
-        else if (document.location.href.match(/^https:\/\/(twitter|x)\.com\/\w+\/media/)) {
-          // メディア一覧
-          this.scanMedia();
+        else if (mProfile) {
+          const postfix = mProfile[2];
+          // プロフィールページ
+          this.scanProfile();
+          if (postfix == 'media') {
+            // メディア一覧
+            this.scanMedia();
+          }
         }
+
       }, PROCESS_INTERVAL_MS);
     }
 
@@ -279,11 +291,22 @@
         Array.from(document.querySelectorAll('div[data-testid="cellInnerDiv"]'))
           .filter(elm => elm.dataset && !elm.dataset.xshl_known);
 
-      for (const containerDiv of newUserDiv) {
-        containerDiv.dataset.xshl_known = true;
-        const user = new UserInfo(containerDiv);
-        this.showCreatedDate(user);
-        this.highlightSpamKeywords(user);
+      for (const div of newUserDiv) {
+        let user = new UserInfo();
+        if (div.dataset.xshl_info_id) {
+          user = this.users[div.dataset.xshl_info_id];
+        }
+        else {
+          const info_id = this.nextContainerDataId++;
+          div.dataset.xshl_info_id = info_id;
+          this.users[div.dataset.xshl_info_id] = user;
+        }
+
+        if (user.readFromHtml(div)) {
+          div.dataset.xshl_known = true;
+          this.showCreatedDate(user);
+          this.highlightSpamKeywords(user);
+        }
       }
     }
 
@@ -365,19 +388,9 @@
      * @param {UserInfo} user 
     */
     highlightSpamKeywords(user) {
-      // 安全とマークされたユーザは無視する
-      if (user.uid && this.isUserSafe(user.uid)) return;
+      const isSafe = user.uid && this.isUserSafe(user.uid);
 
-      let elms = [];
-
-      if (user.nameDiv) {
-        elms.push(user.nameDiv);
-      }
-
-      if (user.descDiv && user.descDiv.textContent.trim().length > 0) {
-        elms.push(user.descDiv);
-      }
-      else if (user.followButton) {
+      if (!user.descDiv || user.descDiv.textContent.trim().length == 0) {
         // プロフィールが空のユーザを強調表示
         let parent = user.followButton;
         for (let i = 0; i < 6 && !!parent.parentElement; i++) {
@@ -388,10 +401,23 @@
           div.textContent = '(空のプロフィール)';
           div.style.margin = '5px 0px 0px 50px';
           div.style.padding = '2px 10px';
-          div.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+          div.style.backgroundColor = isSafe ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 255, 0, 0.5)';
+          div.style.borderRadius = '5px';
+          div.style.opacity = 0.5;
           parent.appendChild(div);
         }
+        else {
+          if (DEBUG_MODE) {
+            console.log(`parent of followButton not found (@${user.sn})`);
+          }
+        }
       }
+
+      let elms = [];
+      if (user.nameLink) elms.push(user.nameLink);
+      if (user.descDiv) elms.push(user.descDiv);
+
+      if (isSafe) return;
 
       let totalScore = 0;
       for (let elm of elms) {
@@ -516,6 +542,129 @@
       }
     }
 
+    // プロフィールページのスキャン
+    scanProfile() {
+      const main = document.querySelector('main');
+      if (!main) return;
+
+      const mUrl = document.location.href.match(/^https:\/\/x\.com\/(\w+)$/);
+      if (!mUrl) return;
+      const sn = mUrl[1];
+
+      const user = new UserInfo();
+      if (!user.readFromJson(sn)) return;
+
+      this.showNumberOfPost(user, main);
+    }
+
+    /**
+     * @param {UserInfo} user
+     * @param {HTMLElement} main 
+     */
+    showNumberOfPost(user, main) {
+      const REGEX_NUM_FOLLOWINGS = /([\d,\.]+(\s*[万億])?)\s*(フォロー中)/i;
+      const REGEX_NUM_FOLLOWERS = /([\d,\.]+(\s*[万億])?)\s*(フォロワー)/i;
+
+      const findLink = (regex) => {
+        for (let tag of ['a', 'button']) {
+          const links = Array.from(main.querySelectorAll(tag)).filter(elm => elm.textContent.match(regex));
+          if (links.length > 0) return links[0];
+        }
+        return null;
+      };
+      const followingLink = findLink(REGEX_NUM_FOLLOWINGS);
+      const followerLink = findLink(REGEX_NUM_FOLLOWERS);
+      if (!followingLink) {
+        if (DEBUG_MODE) console.log('Following link not found');
+        return;
+      }
+      if (!followerLink) {
+        if (DEBUG_MODE) console.log('Follower link not found');
+        return;
+      }
+
+      // ページ遷移しても要素が削除されないので uid で変化点検出する
+      if (followingLink.dataset.xshl_known == user.uid && followerLink.dataset.xshl_known == user.uid) {
+        return;
+      }
+      followingLink.dataset.xshl_known = user.uid;
+      followerLink.dataset.xshl_known = user.uid;
+
+      let computedStyle = window.getComputedStyle(followingLink);
+
+      // フォロー数 / フォロワー数を正確に表示
+      const updateLink = (link, regex, newNumber) => {
+        if (!link || !newNumber) return;
+        const m = link.textContent.match(regex);
+        if (!m) return;
+        const oldNumber = m[1];
+        const spans = Array.from(link.querySelectorAll('span')).filter(span => span.innerHTML == oldNumber);
+        if (spans.length == 0) return;
+        spans[0].textContent = formatNumber(newNumber);
+        computedStyle = window.getComputedStyle(spans[0]);
+        link.title = `正確な値 by ${APP_NAME}`;
+      };
+      updateLink(followingLink, REGEX_NUM_FOLLOWINGS, user.numFollowings);
+      updateLink(followerLink, REGEX_NUM_FOLLOWERS, user.numFollowers);
+
+      const parent = findCommonParent(followingLink, followerLink, 5);
+      if (!parent) {
+        if (DEBUG_MODE) console.log('Parent not found');
+        return;
+      }
+
+      // ポスト数を表示
+      if (user.numPosts !== null) {
+        let postsPerDay = '';
+        // 投稿頻度
+        if (user.numPosts > 0 && user.created) {
+          const elapsedDays = (new Date().getTime() - user.created) / (86400 * 1000);
+          const freq = Math.ceil((user.numPosts / elapsedDays) * 100) / 100;
+          postsPerDay += `(${freq}/day)`;
+        }
+
+        // ページ遷移しても要素が削除されないので再利用する
+        let button = document.querySelector('#xshlNumPosts');
+        let numberElem = document.querySelector('#xshlNumPosts_number');
+        let unitElem = document.querySelector('#xshlNumPosts_unit');
+        if (!button) {
+          button = document.createElement('div');
+          button.id = 'xshlNumPosts';
+          button.display = 'inline';
+          button.style.marginLeft = '20px';
+          button.style.fontFamily = computedStyle.fontFamily;
+          button.style.fontSize = computedStyle.fontSize;
+          button.style.cursor = 'pointer';
+          button.title = `リポスト以外の投稿を検索 by ${APP_NAME}`;
+          parent.appendChild(button);
+        }
+        if (!numberElem) {
+          numberElem = document.createElement('strong');
+          numberElem.id = 'xshlNumPosts_number';
+          button.appendChild(numberElem);
+        }
+        if (!unitElem) {
+          unitElem = document.createElement('span');
+          unitElem.id = 'xshlNumPosts_unit';
+          unitElem.style.opacity = '0.66';
+          button.appendChild(unitElem);
+        }
+
+        numberElem.textContent = formatNumber(user.numPosts);
+        unitElem.textContent = ` ポスト ${postsPerDay}`;
+
+        // イベントを削除して再設定
+        button.innerHTML = button.innerHTML; // イベント削除
+        button.addEventListener('click', () => { window.open(`https://x.com/search?q=from%3A${user.sn}`, '_blank'); });
+        button.addEventListener('mouseover', () => { button.style.textDecoration = 'underline'; });
+        button.addEventListener('mouseout', () => { button.style.textDecoration = 'none'; });
+    }
+      else {
+        if (DEBUG_MODE) console.log('Number of posts not found');
+      }
+
+    }
+
     // メディア一覧のスキャン
     scanMedia() {
       const links = Array.from(document.querySelectorAll('a'));
@@ -583,12 +732,9 @@
   }
 
   class UserInfo {
-    /**
-     * @param {HTMLDivElement} containerDiv 
-     */
-    constructor(containerDiv) {
+    constructor() {
       /** @type {HTMLDivElement} */
-      this.containerDiv = containerDiv;
+      this.containerDiv = null;
 
       /** @type {HTMLElement} */
       this.followButton = null;
@@ -607,12 +753,23 @@
 
       /** @type {string} */
       this.name = null;
+    }
+
+    /** 
+     * @param {HTMLDivElement} containerDiv 
+     * @returns {boolean} 
+     */
+    readFromHtml(containerDiv) {
+      this.containerDiv = containerDiv;
 
       // フォローボタンを見つける
       const btns = Array.from(containerDiv.querySelectorAll('button'))
         .filter(btn => btn.dataset.testid && btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX));
       if (btns.length == 1) {
         this.followButton = btns[0];
+      }
+      else {
+        if (DEBUG_MODE) console.log(`Follow button not found (btns.length=${btns.length})`);
       }
 
       // フォローボタンの属性から User ID を取得
@@ -652,12 +809,80 @@
 
       // 説明文の要素を見つける
       const descDivs = Array.from(this.containerDiv.querySelectorAll('div[dir="auto"]'));
-      if (descDivs.length <= 3) {
+      if (0 < descDivs.length && descDivs.length <= 3) {
         const tmp = descDivs[descDivs.length - 1];
         if (!tmp.textContent.match(/^クリックして\w+さんをフォロー$/) && tmp.style.display != 'none' && !tmp.id.startsWith('id__')) {
           this.descDiv = tmp;
         }
       }
+
+      return !!this.followButton && !!this.uid && !!this.sn;
+    }
+
+    /** 
+     * @param {string} sn
+     * @returns {boolean}
+     */
+    readFromJson(sn) {
+      console.assert(!!sn);
+      this.sn = sn;
+
+      const scripts = Array.from(document.querySelectorAll('script'))
+        .filter(elem => elem.dataset && elem.dataset.testid && elem.dataset.testid == 'UserProfileSchema-test');
+
+      let json = null;
+
+      for (const script of scripts) {
+        const j = JSON.parse(script.innerText);
+        if (!j) continue;
+        if (!j.mainEntity) continue;
+        if (j.mainEntity.additionalName !== this.sn) continue;
+        json = j;
+      }
+
+      if (!json) return false;
+
+      const mainEntity = json.mainEntity;
+      const interactionStatistic = mainEntity.interactionStatistic;
+
+      try {
+        if (mainEntity.givenName !== undefined && this.name === null) {
+          this.name = mainEntity.givenName;
+        }
+
+        if (mainEntity.description !== undefined && this.desc === null) {
+          this.desc = mainEntity.description;
+        }
+
+        if (mainEntity.identifier !== undefined && this.uid === null) {
+          this.uid = mainEntity.identifier;
+        }
+
+        if (mainEntity.image !== undefined && mainEntity.image.contentUrl !== undefined && this.profileImageUrl === null) {
+          this.profileImageUrl = mainEntity.image.contentUrl;
+        }
+
+        for (const stat of interactionStatistic) {
+          if (stat.name == 'Follows') {
+            this.numFollowers = stat.userInteractionCount;
+          }
+          else if (stat.name == 'Friends') {
+            this.numFollowings = stat.userInteractionCount;
+          }
+          else if (stat.name == 'Tweets') {
+            this.numPosts = stat.userInteractionCount;
+          }
+        }
+
+        if (json.dateCreated !== undefined) {
+          this.created = new Date(json.dateCreated).getTime();
+        }
+      }
+      catch (ex) {
+        console.error(`${APP_NAME}: ${ex}`);
+      }
+
+      return true;
     }
   }
 
@@ -665,15 +890,17 @@
    * 要素 a と b の共通の親要素を返す
    * @param {HTMLElement} a 
    * @param {HTMLElement} b 
+   * @param {number} maxDistance
    * @returns {HTMLElement|null}
    */
-  function findCommonParent(a, b) {
+  function findCommonParent(a, b, maxDistance = 99999) {
     var parents = [];
-    while (a.parentElement) {
+    let distA = 0, distB = 0;
+    while (a.parentElement && distA++ < maxDistance) {
       parents.push(a.parentElement);
       a = a.parentElement;
     }
-    while (b.parentElement) {
+    while (b.parentElement && distB++ < maxDistance) {
       if (parents.includes(b.parentElement)) {
         return b.parentElement;
       }
@@ -791,6 +1018,14 @@
     const ret = orig.replaceAll(/[Ａ-Ｚａ-ｚ０-９]/g, m => String.fromCharCode(m.charCodeAt(0) - 0xFEE0));
     console.assert(orig.length == ret.length);
     return ret;
+  }
+
+  /** 
+   * @param {number} num
+   * @returns {string}
+   */
+  function formatNumber(num) {
+    return num.toLocaleString('ja-JP');
   }
 
   window.xsphl = new XSpamHighlighter();
