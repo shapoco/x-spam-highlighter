@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name        X Spam Highlighter
-// @namespace   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/
+// @namespace   https://github.com/shapoco/x-spam-highlighter
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.239
+// @version     1.3.277
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -14,6 +14,8 @@
 
 (function () {
   'use strict';
+
+  const DEBUG_MODE = false;
 
   const APP_NAME = 'X Spam Highlighter';
   const SETTING_KEY = 'xsphl_settings';
@@ -233,8 +235,6 @@
   class XSpamHighlighter {
     constructor() {
       this.lastLocation = null;
-      this.followButtons = [];
-      this.followerListRoot = null;
       this.mediaElems = [];
       this.finishedElems = [];
       this.settings = {
@@ -250,8 +250,6 @@
         const observer = new MutationObserver((mutations) => {
           if (this.lastLocation != document.location.href) {
             this.lastLocation = document.location.href;
-            this.followButtons = [];
-            this.followerListRoot = null;
             this.mediaElems = [];
             this.finishedElems = [];
           }
@@ -277,73 +275,27 @@
     }
 
     scanUsers() {
-      // フォローボタンを探す
-      const newFollowButtons =
-        Array.from(document.querySelectorAll('button'))
-          .filter(btn => this.isFollowButtonInList(btn));
-      this.followButtons = this.followButtons.concat(newFollowButtons);
+      const newUserDiv =
+        Array.from(document.querySelectorAll('div[data-testid="cellInnerDiv"]'))
+          .filter(elm => elm.dataset && !elm.dataset.xshl_known);
 
-      // 作成日時の表示
-      newFollowButtons.forEach(btn => this.showCreatedDate(btn));
-
-      if (this.followButtons.length < 2) return;
-
-      // フォローボタンの共通の親要素を探す
-      if (!this.followerListRoot) {
-        this.followerListRoot = this.findCommonParent(this.followButtons[0], this.followButtons[1]);
-        if (!this.followerListRoot) {
-          console.error('Root element not found.');
-        }
+      for (const containerDiv of newUserDiv) {
+        containerDiv.dataset.xshl_known = true;
+        const user = new UserInfo(containerDiv);
+        this.showCreatedDate(user);
+        this.highlightSpamKeywords(user);
       }
-      if (!this.followerListRoot) return;
-
-      Array.from(this.followerListRoot.children).forEach((item) => this.processUser(item));
-    }
-
-    // 要素がフォローボタンかどうかを返す
-    isFollowButtonInList(btn) {
-      if (!this.isFollowButton(btn)) return false;
-
-      // 既知のボタンは除外
-      if (btn.dataset.xshl_known) return false;
-      btn.dataset.xshl_known = true;
-
-      // ビューポートの端にある要素は除外
-      const vw = window.innerWidth;
-      const xMin = (vw - 600) / 2;
-      const xMax = (vw + 600) / 2;
-      const rect = btn.getBoundingClientRect();
-      if (rect.left < xMin || xMax < rect.right) return false;
-
-      return true;
-    }
-
-    // 要素がフォローボタンかどうかを返す
-    isFollowButton(btn) {
-      // フォローボタンでないものは除外
-      if (!btn.dataset.testid) return false;
-      if (!btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX)) return false;
-      return true;
     }
 
     /**
-     * @param {HTMLButtonElement} btn 
+     * @param {UserInfo} user 
      */
-    showCreatedDate(btn) {
-      if (!btn.dataset.testid) return false;
-      const m = btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX);
-      if (!m) return false;
-      const uid = m[1];
-
-      let sn = null;
-      if (btn.ariaLabel) {
-        const m = btn.ariaLabel.match(/@([a-z0-9_]+)$/i);
-        if (m) sn = m[1];
-      }
+    showCreatedDate(user) {
+      if (!user.followButton) return;
 
       try {
         // アカウント作成日を推定
-        const estTime = esitimateTimeFromId(uid);
+        const estTime = esitimateTimeFromId(user.uid);
         const age = document.createElement('span');
         age.textContent = prettyDate(estTime);
         age.title = `推定作成日: ${new Date(estTime).toLocaleDateString()}\n${APP_NAME} が User ID から推定`;
@@ -370,27 +322,27 @@
         safeButton.style.fontSize = '12px';
         safeButton.style.padding = '0';
         safeButton.style.margin = '0';
+        safeButton.textContent = '🛡️';
         const updateSafeButton = () => {
-          if (this.isUserSafe(uid)) {
-            safeButton.textContent = '🛡️';
+          if (this.isUserSafe(user.uid)) {
             safeButton.style.filter = '';
             safeButton.style.transform = 'scale(1.25)';
             safeButton.style.opacity = 1;
             safeButton.title = 'このユーザの安全マークを解除する';
           }
           else {
-            safeButton.textContent = '🛡️';
             safeButton.style.filter = 'grayscale(100%)';
             safeButton.style.transform = 'scale(1.25)';
             safeButton.style.opacity = 0.5;
             safeButton.title = 'このユーザを安全としてマークする';
           }
         };
+        updateSafeButton();
+
         safeButton.addEventListener('click', async () => {
-          await this.toggleSafeUser(uid);
+          await this.toggleSafeUser(user.uid);
           updateSafeButton();
         });
-        updateSafeButton();
 
         const div = document.createElement('div');
         div.style.position = 'absolute';
@@ -402,91 +354,90 @@
         div.appendChild(document.createTextNode(' | '));
         div.appendChild(safeButton);
 
-        btn.parentElement.appendChild(div);
+        user.followButton.parentElement.appendChild(div);
       }
       catch (e) {
         console.error(e);
       }
     }
 
-    // 要素 a と b の共通の親要素を返す
-    findCommonParent(a, b) {
-      var parents = [];
-      while (a.parentElement) {
-        parents.push(a.parentElement);
-        a = a.parentElement;
-      }
-      while (b.parentElement) {
-        if (parents.includes(b.parentElement)) {
-          return b.parentElement;
-        }
-        b = b.parentElement;
-      }
-      return null;
-    }
-
-    // ユーザ毎の処理
-    processUser(elm) {
-      // 処理済みの要素は除く
-      if (this.finishedElems.includes(elm)) return;
-      this.finishedElems.push(elm);
-
-      // ユーザ ID を取得
-      let uid = null;
-      for (let btn of Array.from(elm.querySelectorAll('button'))) {
-        if (!btn.dataset.testid) continue;
-        const m = btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX);
-        if (m) {
-          uid = m[1];
-          break;
-        }
-      }
+    /**
+     * @param {UserInfo} user 
+    */
+    highlightSpamKeywords(user) {
       // 安全とマークされたユーザは無視する
-      if (uid && this.isUserSafe(uid)) return;
+      if (user.uid && this.isUserSafe(user.uid)) return;
 
-      const text = this.normalizeForHitTest(getTextContentWithAlt(elm));
+      let elms = [];
 
-      // 評価
-      var wordsToBeHighlighted = [];
-      var add = 0;
-      RULES.forEach(rule => {
-        var allMatched = true;
-        var matchedWords = [];
+      if (user.nameDiv) {
+        elms.push(user.nameDiv);
+      }
 
-        // ルールに定義された全ての正規表現にマッチするか確認する
-        rule.regexes.forEach(regex => {
-          const regexMod = new RegExp(regex.source, 'i');
-          const matches = text.match(regexMod);
-          if (matches) {
-            matches.forEach(m => {
-              if (!wordsToBeHighlighted.includes(m) && !matchedWords.includes(m)) {
-                matchedWords.push(m);
-              }
-            });
-          }
-          else {
-            allMatched = false;
+      if (user.descDiv && user.descDiv.textContent.trim().length > 0) {
+        elms.push(user.descDiv);
+      }
+      else if (user.followButton) {
+        // プロフィールが空のユーザを強調表示
+        let parent = user.followButton;
+        for (let i = 0; i < 6 && !!parent.parentElement; i++) {
+          parent = parent.parentElement;
+        }
+        if (parent) {
+          const div = document.createElement('div');
+          div.textContent = '(空のプロフィール)';
+          div.style.margin = '5px 0px 0px 50px';
+          div.style.padding = '2px 10px';
+          div.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+          parent.appendChild(div);
+        }
+      }
+
+      let totalScore = 0;
+      for (let elm of elms) {
+        const text = this.normalizeForHitTest(getTextContentWithAlt(elm));
+
+        // 評価
+        var wordsToBeHighlighted = [];
+        RULES.forEach(rule => {
+          var allMatched = true;
+          var matchedWords = [];
+
+          // ルールに定義された全ての正規表現にマッチするか確認する
+          rule.regexes.forEach(regex => {
+            const regexMod = new RegExp(regex.source, 'i');
+            const matches = text.match(regexMod);
+            if (matches) {
+              matches.forEach(m => {
+                if (!wordsToBeHighlighted.includes(m) && !matchedWords.includes(m)) {
+                  matchedWords.push(m);
+                }
+              });
+            }
+            else {
+              allMatched = false;
+            }
+          });
+
+          if (allMatched) {
+            // 全てにマッチしたらスコアを加算
+            totalScore += rule.add;
+            wordsToBeHighlighted = wordsToBeHighlighted.concat(matchedWords);
           }
         });
 
-        if (allMatched) {
-          // 全てにマッチしたらスコアを加算
-          add += rule.add;
-          wordsToBeHighlighted = wordsToBeHighlighted.concat(matchedWords);
-        }
-      });
+        // キーワードハイライト
+        wordsToBeHighlighted.forEach(kwd => {
+          this.highlightKeyword(elm, kwd);
+        });
+      }
 
-      // キーワードハイライト
-      wordsToBeHighlighted.forEach(kwd => {
-        this.highlightKeyword(elm, kwd);
-      });
-
-      if (add <= 10) return;
+      if (totalScore <= 10) return;
 
       // ユーザのハイライト
       const MAX_ALPHA = 0.5;
-      const alpha = Math.max(0, Math.min(MAX_ALPHA, add / 100));
-      elm.style.backgroundColor = `rgba(255, 0, 0, ${alpha})`;
+      const alpha = Math.max(0, Math.min(MAX_ALPHA, totalScore / 100));
+      user.containerDiv.style.backgroundColor = `rgba(255, 0, 0, ${alpha})`;
     }
 
     highlightKeyword(elm, kwd) {
@@ -631,7 +582,111 @@
     }
   }
 
-  // 画像 (emoji) の alt を含む textContent
+  class UserInfo {
+    /**
+     * @param {HTMLDivElement} containerDiv 
+     */
+    constructor(containerDiv) {
+      /** @type {HTMLDivElement} */
+      this.containerDiv = containerDiv;
+
+      /** @type {HTMLElement} */
+      this.followButton = null;
+
+      /** @type {HTMLElement} */
+      this.nameLink = null;
+
+      /** @type {HTMLElement} */
+      this.descDiv = null;
+
+      /** @type {string} */
+      this.uid = null;
+
+      /** @type {string} */
+      this.sn = null;
+
+      /** @type {string} */
+      this.name = null;
+
+      // フォローボタンを見つける
+      const btns = Array.from(containerDiv.querySelectorAll('button'))
+        .filter(btn => btn.dataset.testid && btn.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX));
+      if (btns.length == 1) {
+        this.followButton = btns[0];
+      }
+
+      // フォローボタンの属性から User ID を取得
+      if (this.followButton && this.followButton.dataset.testid) {
+        const m = this.followButton.dataset.testid.match(FOLLOW_BUTTON_DATA_ID_REGEX);
+        if (m) {
+          this.uid = m[1];
+        }
+      }
+
+      // フォローボタンの属性からスクリーンネームを取得 (取れない場合もある)
+      if (!this.sn && this.followButton && this.followButton.ariaLabel) {
+        const m = this.followButton.ariaLabel.match(/@([a-z0-9_]+)$/i);
+        if (m) this.sn = m[1];
+      }
+
+      // プロフィールアイコンの属性からスクリーンネームを取得 (取れない場合もある)
+      if (!this.sn) {
+        const div = this.containerDiv.querySelector('div[data-testid^="UserAvatar-Container-"]');
+        if (div) {
+          const m = div.dataset.testid.match(/^UserAvatar-Container-(\w+)$/);
+          if (m) this.sn = m[1];
+        }
+      }
+
+      // プロフィールページへのリンクから名前を得る
+      if (this.sn) {
+        const profileLinks = Array.from(this.containerDiv.querySelectorAll(`a[href="/${this.sn}"]`));
+        if (profileLinks.length >= 3) {
+          if (profileLinks[2].textContent == `@${this.sn}`) {
+            // 3個目のリンクがスクリーンネームなら多分1個目がアイコン、2個目が名前
+            this.nameLink = profileLinks[1];
+            this.name = getTextContentWithAlt(this.nameLink);
+          }
+        }
+      }
+
+      // 説明文の要素を見つける
+      const descDivs = Array.from(this.containerDiv.querySelectorAll('div[dir="auto"]'));
+      if (descDivs.length <= 3) {
+        const tmp = descDivs[descDivs.length - 1];
+        if (!tmp.textContent.match(/^クリックして\w+さんをフォロー$/) && tmp.style.display != 'none' && !tmp.id.startsWith('id__')) {
+          this.descDiv = tmp;
+        }
+      }
+    }
+  }
+
+  /**
+   * 要素 a と b の共通の親要素を返す
+   * @param {HTMLElement} a 
+   * @param {HTMLElement} b 
+   * @returns {HTMLElement|null}
+   */
+  function findCommonParent(a, b) {
+    var parents = [];
+    while (a.parentElement) {
+      parents.push(a.parentElement);
+      a = a.parentElement;
+    }
+    while (b.parentElement) {
+      if (parents.includes(b.parentElement)) {
+        return b.parentElement;
+      }
+      b = b.parentElement;
+    }
+    return null;
+  }
+
+  /**
+   * 画像 (emoji) の alt を含む textContent を返す
+   * @param {HTMLElement} elm
+   * @returns {string}
+  */
   function getTextContentWithAlt(elm) {
     if (elm) {
       if (elm.nodeType === Node.TEXT_NODE) {
@@ -640,6 +695,9 @@
       else if (elm.nodeType === Node.ELEMENT_NODE) {
         if (elm.tagName.toLowerCase() === 'img') {
           return elm.alt;
+        }
+        else if (elm.tagName.toLowerCase() === 'br') {
+          return '\n';
         }
         else {
           let text = '';
