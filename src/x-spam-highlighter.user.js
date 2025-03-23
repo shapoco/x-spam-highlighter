@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.414
+// @version     1.3.419
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -268,7 +268,7 @@
 
       this.intervalId = window.setInterval(() => {
         const mFollowList = document.location.href.match(/^https:\/\/x\.com\/\w+\/(verified_followers|followers_you_follow|followers|following)/);
-        const mProfile = document.location.href.match(/^https:\/\/x\.com\/(\w+)(\/(with_replies|media))?\/?(\?.+)?$/);
+        const mProfile = document.location.href.match(/^https:\/\/x\.com\/(\w+)(\/(with_replies|highlights|media))?\/?(\?.+)?$/);
         if (mFollowList) {
           // フォロー/フォロワー一覧
           this.scanUsers();
@@ -550,10 +550,10 @@
     /** プロフィールページのスキャン */
     scanProfile() {
       const main = document.querySelector('main');
-      if (!main) return;
+      if (isNull(main, 'main tag')) return;
 
-      const mUrl = document.location.href.match(/^https:\/\/x\.com\/(\w+)$/);
-      if (!mUrl) return;
+      const mUrl = document.location.href.match(/^https:\/\/x\.com\/(\w+)/);
+      if (isNull(mUrl, 'screen name')) return;
       const sn = mUrl[1];
 
       const user = new UserInfo();
@@ -894,7 +894,7 @@
         json = j;
       }
 
-      if (!json) return false;
+      if (isNull(json, 'JSON of user info')) return false;
 
       const mainEntity = json.mainEntity;
       const interactionStatistic = mainEntity.interactionStatistic;
