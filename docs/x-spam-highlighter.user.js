@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.389
+// @version     1.3.390
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -275,7 +275,7 @@
           this.highlightLocks();
         }
         else if (mProfile) {
-          const postfix = mProfile[2];
+          const postfix = mProfile[3];
           // プロフィールページ
           this.scanProfile();
           if (postfix == 'media') {
