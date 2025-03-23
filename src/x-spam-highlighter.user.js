@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.419
+// @version     1.3.420
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -948,7 +948,7 @@
    * @returns {HTMLElement|null}
    */
   function findCommonParent(a, b, maxDistance = 99999) {
-    var parents = [];
+    let parents = [];
     let distA = 0, distB = 0;
     while (a.parentElement && distA++ < maxDistance) {
       parents.push(a.parentElement);
