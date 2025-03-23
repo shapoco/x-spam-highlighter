@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.409
+// @version     1.3.414
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -622,7 +622,18 @@
         // 投稿頻度
         if (user.numPosts > 0 && user.created) {
           const elapsedDays = (new Date().getTime() - user.created) / (86400 * 1000);
-          postsPerDay = Math.ceil((user.numPosts / elapsedDays) * 100) / 100;
+          postsPerDay = user.numPosts / elapsedDays;
+          if (postsPerDay < 1) {
+            const clog10 = Math.ceil(Math.log10(postsPerDay));
+            const round = Math.pow(10, 2 - clog10);
+            postsPerDay = Math.round(postsPerDay * round) / round;
+          }
+          else if (postsPerDay < 100) {
+            postsPerDay = Math.round(postsPerDay * 10) / 10;
+          }
+          else {
+            postsPerDay = Math.round(postsPerDay);
+          }
           postFreq += `(${postsPerDay}/day)`;
         }
 
