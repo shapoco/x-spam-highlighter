@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.391
+// @version     1.3.408
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -328,18 +328,7 @@
         age.title = `推定作成日: ${new Date(estTime).toLocaleDateString()}\nby ${APP_NAME}`;
 
         // 作成日が近いものは強調表示
-        const MONTH_MIN = 3;
-        const MONTH_MAX = 6;
-        let alpha = 0;
-        const month = (new Date().getTime() - estTime) / (1000 * 86400 * (365.2425 / 12));
-        if (month < MONTH_MAX) {
-          alpha = Math.min(1, (MONTH_MAX - month) / (MONTH_MAX - MONTH_MIN));
-          age.style.fontWeight = 'bold';
-        }
-        const r = Math.min(255, 128 + Math.floor(alpha * 64));
-        const g = Math.max(0, 128 - Math.floor(alpha * 128));
-        const b = Math.min(255, 128 + Math.floor(alpha * 127));
-        age.style.color = `rgb(${r}, ${g}, ${b})`;
+        setAgeColor(age, estTime);
 
         // 安全なフォロワーアイコン
         const safeButton = document.createElement('button');
@@ -628,12 +617,13 @@
 
       // ポスト数を表示
       if (!isNull(user.numPosts, `Number of posts for @${user.sn}`)) {
-        let postsPerDay = '';
+        let postsPerDay = null;
+        let postFreq = '';
         // 投稿頻度
         if (user.numPosts > 0 && user.created) {
           const elapsedDays = (new Date().getTime() - user.created) / (86400 * 1000);
-          const freq = Math.ceil((user.numPosts / elapsedDays) * 100) / 100;
-          postsPerDay += `(${freq}/day)`;
+          postsPerDay = Math.ceil((user.numPosts / elapsedDays) * 100) / 100;
+          postFreq += `(${postsPerDay}/day)`;
         }
 
         // ページ遷移しても要素が削除されないので再利用する
@@ -664,7 +654,13 @@
         }
 
         numberElem.textContent = formatNumber(user.numPosts);
-        unitElem.textContent = ` ポスト ${postsPerDay}`;
+        unitElem.textContent = ` ポスト ${postFreq}`;
+
+        if (postsPerDay !== 0) {
+          const alpha = Math.round(100 * Math.max(0, Math.min(1, postsPerDay / 0.3)));
+          button.style.color = '#f08';
+          button.style.filter = `grayscale(${alpha}%)`;
+        }
 
         // イベントを削除して再設定
         button.innerHTML = button.innerHTML; // イベント削除
@@ -690,20 +686,28 @@
       if (containerSpan.dataset.xshl_known && containerSpan.dataset.xshl_known == user.uid) return;
       containerSpan.dataset.xshl_known = user.uid;
 
-      let textSpan = null;
-      for (let span of Array.from(containerSpan.querySelectorAll('span'))) {
-        if (span.textContent == span.innerHTML) {
-          textSpan = span;
-          break;
+      let textSpan = containerSpan.querySelector('span[data-xshl_join_date="1"]');
+      if (!textSpan) {
+        for (let span of Array.from(containerSpan.querySelectorAll('span'))) {
+          if (span.textContent == span.innerHTML) {
+            textSpan = span;
+            break;
+          }
         }
       }
       if (isNull(textSpan, 'Text span of created date')) return;
 
       const oldStr = textSpan.textContent;
-      const newStr = `${new Date(user.created).toLocaleDateString()} (${prettyDate(user.created)}) からXを利用中`;
-      textSpan.textContent = newStr;
+      textSpan.innerHTML = '';
+      textSpan.appendChild(document.createTextNode(`${new Date(user.created).toLocaleDateString()} (`));
+      const ageSpan = document.createElement('span');
+      ageSpan.textContent = prettyDate(user.created);
+      setAgeColor(ageSpan, user.created);
+      textSpan.appendChild(ageSpan);
+      textSpan.appendChild(document.createTextNode(') からXを利用中'));
       textSpan.title = `正確な値 by ${APP_NAME}`;
-      debugLog(`Created date was replaced: '${oldStr}' -> '${newStr}'`);
+      textSpan.dataset.xshl_join_date = "1";
+      debugLog(`Created date was replaced: '${oldStr}' -> '${textSpan.textContent}'`);
     }
 
     // メディア一覧のスキャン
@@ -1045,6 +1049,25 @@
     if (month < 1) return `${Math.round(days)}日前`;
     if (years < 1) return `${Math.round(month * 10) / 10}ヶ月前`;
     return `${Math.round(years * 10) / 10}年前`;
+  }
+
+  /**
+   * @param {HTMLElement} elm 
+   * @param {number} t 
+   */
+  function setAgeColor(elm, t) {
+    const MONTH_MIN = 3;
+    const MONTH_MAX = 6;
+    let alpha = 0;
+    const month = (new Date().getTime() - t) / (1000 * 86400 * (365.2425 / 12));
+    if (month < MONTH_MAX) {
+      alpha = Math.min(1, (MONTH_MAX - month) / (MONTH_MAX - MONTH_MIN));
+      elm.style.fontWeight = 'bold';
+    }
+    const r = Math.min(255, 128 + Math.floor(alpha * 64));
+    const g = Math.max(0, 128 - Math.floor(alpha * 128));
+    const b = Math.min(255, 128 + Math.floor(alpha * 127));
+    elm.style.color = `rgb(${r}, ${g}, ${b})`;
   }
 
   function toHiragana(orig) {
