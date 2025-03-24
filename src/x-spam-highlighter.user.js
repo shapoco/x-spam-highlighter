@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.421
+// @version     1.3.422
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -895,7 +895,7 @@
         const j = JSON.parse(script.innerText);
         if (!j) continue;
         if (!j.mainEntity) continue;
-        if (j.mainEntity.additionalName !== this.sn) continue;
+        if (j.mainEntity.additionalName.toLowerCase() !== this.sn.toLowerCase()) continue;
         json = j;
       }
 
@@ -905,6 +905,10 @@
       const interactionStatistic = mainEntity.interactionStatistic;
 
       try {
+        if (mainEntity.additionalName !== undefined) {
+          this.sn = mainEntity.additionalName;
+        }
+
         if (mainEntity.givenName !== undefined && this.name === null) {
           this.name = mainEntity.givenName;
         }
