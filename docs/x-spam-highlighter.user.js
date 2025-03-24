@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.422
+// @version     1.3.423
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -905,7 +905,7 @@
       const interactionStatistic = mainEntity.interactionStatistic;
 
       try {
-        if (mainEntity.additionalName !== undefined) {
+        if (!!mainEntity.additionalName) {
           this.sn = mainEntity.additionalName;
         }
 
