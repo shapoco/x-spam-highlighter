@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.420
+// @version     1.3.421
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -25,6 +25,8 @@
   const KEYWORD_BACKGROUND_COLOR = 'rgba(255, 255, 0, 0.25)';
 
   const FOLLOW_BUTTON_DATA_ID_REGEX = /(\d+)-(un)?(follow|block)/;
+
+  const SN_EXCLUDES = ['home', 'explore', 'messages', 'notifications', 'search'];
 
   const REGEX_AGE = /[1-4]\d(歳|才|age|さい|↑|↓|[台代]([前後]半)?|中盤)|じゅ[うー](ご|ろく|なな|はち)|二十歳|はたち|アラ(サー|フォー|フィフ)/g; // todo: 先頭に \b があると効かない？
   const REGEX_LENGTH = /1[3-8]\d+(cm|㎝|センチ|│)/g; // todo: 先頭に \b があると効かない？
@@ -275,12 +277,15 @@
           this.highlightLocks();
         }
         else if (mProfile) {
-          const postfix = mProfile[3];
-          // プロフィールページ
-          this.scanProfile();
-          if (postfix == 'media') {
-            // メディア一覧
-            this.scanMedia();
+          const sn = mProfile[1];
+          if (!SN_EXCLUDES.includes(sn)) {
+            const postfix = mProfile[3];
+            // プロフィールページ
+            this.scanProfile();
+            if (postfix == 'media') {
+              // メディア一覧
+              this.scanMedia();
+            }
           }
         }
       }, PROCESS_INTERVAL_MS);
