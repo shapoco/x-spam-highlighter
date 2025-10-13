@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.423
+// @version     1.3.438
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -713,15 +713,16 @@
       }
       if (isNull(textSpan, 'Text span of created date')) return;
 
+      const createdDate = new Date(user.created);
       const oldStr = textSpan.textContent;
       textSpan.innerHTML = '';
-      textSpan.appendChild(document.createTextNode(`${new Date(user.created).toLocaleDateString()} (`));
+      textSpan.appendChild(document.createTextNode(`${createdDate.toLocaleDateString()} (`));
       const ageSpan = document.createElement('span');
       ageSpan.textContent = prettyDate(user.created);
       setAgeColor(ageSpan, user.created);
       textSpan.appendChild(ageSpan);
       textSpan.appendChild(document.createTextNode(') からXを利用中'));
-      textSpan.title = `正確な値 by ${APP_NAME}`;
+      textSpan.title = `${createdDate.toLocaleString()}\n正確な値 by ${APP_NAME}`;
       textSpan.dataset.xshl_join_date = "1";
       debugLog(`Created date was replaced: '${oldStr}' -> '${textSpan.textContent}'`);
     }
@@ -1004,15 +1005,37 @@
   // User ID と作成日時の関係
   const USER_ID_DICT = [
     {
-      18548500: new Date('2009-01-02').getTime(),
+      4063350: new Date('2007-04-11').getTime(),
+      4873950: new Date('2007-04-16').getTime(),
+      5071550: new Date('2007-04-18').getTime(),
+      5564850: new Date('2007-04-28').getTime(),
+      6110950: new Date('2007-05-18').getTime(),
+      9562550: new Date('2007-10-20').getTime(),
+      11051950: new Date('2007-12-12').getTime(),
+      14343150: new Date('2008-04-10').getTime(),
+      21565150: new Date('2009-02-22').getTime(),
+      24127350: new Date('2009-03-13').getTime(),
+      27244050: new Date('2009-03-29').getTime(),
+      58340950: new Date('2009-07-20').getTime(),
+      61398850: new Date('2009-07-30').getTime(),
+      76380150: new Date('2009-09-23').getTime(),
+      86963150: new Date('2009-11-03').getTime(),
       129095500: new Date('2010-04-03').getTime(),
+      140105500: new Date('2010-05-05').getTime(),
+      225838500: new Date('2010-12-13').getTime(),
+      256914500: new Date('2011-02-24').getTime(),
       341869500: new Date('2011-07-25').getTime(),
+      410564500: new Date('2011-11-12').getTime(),
       473422500: new Date('2012-01-25').getTime(),
+      1488106500: new Date('2013-06-07').getTime(),
       1703770500: new Date('2013-08-27').getTime(),
       2475285500: new Date('2014-05-03').getTime(),
       3034548500: new Date('2015-02-21').getTime(),
+      3226318500: new Date('2015-05-26').getTime(),
+      4788270500: new Date('2016-01-20').getTime(),
     },
     {
+      744223985777315000: new Date('2016-06-19').getTime(),
       793757834504765000: new Date('2016-11-02').getTime(),
       831503904093315000: new Date('2017-02-14').getTime(),
       1086585820939575000: new Date('2019-01-19').getTime(),
@@ -1023,42 +1046,50 @@
       1745152119630445000: new Date('2024-01-11').getTime(),
       1894161355206525000: new Date('2025-02-25').getTime(),
       1900737971101595000: new Date('2025-03-15').getTime(),
+      1907944148453455000: new Date('2025-04-04').getTime(),
+      1917925532819425000: new Date('2025-05-01').getTime(),
+      1977657953626071000: new Date('2025-11-13').getTime(),
     }
   ];
 
   // UserId から作成日時を推定
   function esitimateTimeFromId(uidStr) {
     const uid = parseFloat(uidStr);
-    let id0 = -1, id1 = -1;
-    let date0 = -1, date1 = -1;
-    for (let i = 0; i < USER_ID_DICT.length; i++) {
-      const dict = USER_ID_DICT[i];
-      let logId0 = -1, logDate0 = -1, diff0 = Number.MAX_VALUE;
-      let logId1 = -1, logDate1 = -1, diff1 = Number.MAX_VALUE;
-      for (let key in dict) {
-        const keyUid = parseFloat(key);
-        const diff = Math.abs(uid - keyUid);
-        if (diff < diff0) {
-          logId1 = logId0;
-          logDate1 = logDate0;
-          logId0 = keyUid;
-          logDate0 = dict[key];
-          diff1 = diff0;
-          diff0 = diff;
+
+    let dictIndex = -1;
+    {
+      let minDiff = Number.MAX_VALUE;
+      for (let i = 0; i < USER_ID_DICT.length; i++) {
+        const dict = USER_ID_DICT[i];
+        const diff = Math.min(...Object.keys(dict).map(key => Math.abs(uid - parseFloat(key))));
+        if (diff < minDiff) {
+          minDiff = diff;
+          dictIndex = i;
         }
-        else if (diff < diff1) {
-          logId1 = keyUid;
-          logDate1 = dict[key];
-          diff1 = diff;
-        }
-      }
-      if (logId0 >= 0 && logId1 >= 0) {
-        id0 = logId0; date0 = logDate0;
-        id1 = logId1; date1 = logDate1;
-        if (logId0 <= uid && uid < logId1) break;
       }
     }
-    return date0 + (date1 - date0) * (uid - id0) / (id1 - id0);
+    const dict = USER_ID_DICT[dictIndex];
+
+    let nearUid0 = -1, nearDate0 = -1, nearDiff0 = Number.MAX_VALUE;
+    let nearUid1 = -1, nearDate1 = -1, nearDiff1 = Number.MAX_VALUE;
+    for (let key in dict) {
+      const keyUid = parseFloat(key);
+      const diff = Math.abs(uid - keyUid);
+      if (diff < nearDiff0) {
+        nearUid1 = nearUid0;
+        nearDate1 = nearDate0;
+        nearDiff1 = nearDiff0;
+        nearUid0 = keyUid;
+        nearDate0 = dict[key];
+        nearDiff0 = diff;
+      }
+      else if (diff < nearDiff1) {
+        nearUid1 = keyUid;
+        nearDate1 = dict[key];
+        nearDiff1 = diff;
+      }
+    }
+    return nearDate0 + (nearDate1 - nearDate0) * (uid - nearUid0) / (nearUid1 - nearUid0);
   }
 
   function prettyDate(t) {
