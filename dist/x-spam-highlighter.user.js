@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.438
+// @version     1.3.439
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -1048,7 +1048,7 @@
       1900737971101595000: new Date('2025-03-15').getTime(),
       1907944148453455000: new Date('2025-04-04').getTime(),
       1917925532819425000: new Date('2025-05-01').getTime(),
-      1977657953626071000: new Date('2025-11-13').getTime(),
+      1977657953626071000: new Date('2025-10-13').getTime(),
     }
   ];
 
