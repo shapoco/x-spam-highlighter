@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.3.441
+// @version     1.4.470
 // @author      Shapoco
 // @description フォロワー覧でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -29,7 +29,8 @@
   const SN_EXCLUDES = ['home', 'explore', 'messages', 'notifications', 'search'];
 
   const REGEX_AGE = /[1-4]\d(歳|才|age|さい|↑|↓|[台代]([前後]半)?|中盤)|じゅ[うー](ご|ろく|なな|はち)|二十歳|はたち|アラ(サー|フォー|フィフ)/g; // todo: 先頭に \b があると効かない？
-  const REGEX_LENGTH = /1[3-8]\d+(cm|㎝|センチ|│)/g; // todo: 先頭に \b があると効かない？
+  const REGEX_LENGTH = /1[3-8]\d(cm|㎝|センチ)/g; // todo: 先頭に \b があると効かない？
+  const REGEX_WEIGHT = /[4-6]\d(kg|㎏|キロ)/g; // todo: 先頭に \b があると効かない？
   const REGEX_BUST = /[A-Z](カップ|cup)/g; // todo: 先頭に \b があると効かない？
   const REGEX_REGION = /北海道|青森|岩手|宮城|秋田|山形|福島|茨城|栃木|群馬|埼玉|千葉|東京|神奈川|山梨|長野|新潟|富山|石川|福井|岐阜|静岡|愛知|三重|滋賀|京|大阪|兵庫|奈良|和歌山|鳥取|島根|岡山|広島|山口|徳島|香川|愛媛|高知|福岡|佐賀|長崎|熊本|大分|宮崎|鹿児島|沖縄|東北|関東|北陸|中部|近畿|中国|四国|九州|都内|(千代田|中央|港|新宿|文京|台東|墨田|江東|品川|目黒|大田|世田谷|渋谷|中野|杉並|豊島|北|荒川|板橋|練馬|足立|葛飾|江戸川|23)区|地方/g;
   const REGEX_MEDIA = /動画|写真?|録画/g;
@@ -37,7 +38,7 @@
   const REGEX_LIVING_ALONE = /(ひとり|[1一]人)暮らし/g;
   const REGEX_MARRIAGE_STATE = /独身|未婚|既婚/g;
   const REGEX_LONELY = /(寂|さび)しい/g;
-  const REGEX_JOB = /元?(\bOL\b|キャバ嬢|風俗|フ[ウー]ゾク|看護師|(カフェ|アパレル)店員|メンズ?エステ?|教[師諭])/g;
+  const REGEX_JOB = /元?(\bOL\b|キャバ嬢?|風俗嬢?|フ[ウー]ゾク嬢?|ヘルス嬢?|デリヘル|看護師|(カフェ|アパレル)店員|メンズ?エステ?|ヨガインストラクター|モデル|教[師諭])/g;
   const REGEX_GRADE = /(\b[1-3]|[一二三])年生?|[高大]([一二三]|[1-3]\b)/g;
   const REGEX_CLUB = /(水泳|演劇|卓球|バレー|吹奏楽|美術)部/g;
   const REGEX_SEXUAL_DESIRE = /(性|せ[ーいぃ])(欲|[よょ]く)|欲求不満|[溜た]まってる/g;
@@ -64,8 +65,11 @@
     { regexes: [/不倫/g], add: 20 },
     { regexes: [/すぐに?[濡ぬ]れ(ちゃう|ます)/g], add: 20 },
     { regexes: [REGEX_AGE, REGEX_LENGTH], add: 20 },
+    { regexes: [REGEX_AGE, REGEX_WEIGHT], add: 20 },
     { regexes: [REGEX_AGE, REGEX_BUST], add: 20 },
     { regexes: [REGEX_LENGTH, REGEX_BUST], add: 20 },
+    { regexes: [REGEX_WEIGHT, REGEX_BUST], add: 20 },
+    { regexes: [REGEX_LENGTH, REGEX_WEIGHT], add: 20 },
     { regexes: [/オナニスト/g], add: 20 },
     { regexes: [/ヤリ(マン|チン)|ビッチ/g], add: 20 },
     { regexes: [/今日の下着/g], add: 20 },
@@ -160,6 +164,7 @@
     { regexes: [REGEX_AGE, REGEX_JOB], add: 10 },
     { regexes: [REGEX_LENGTH, REGEX_JOB], add: 10 },
     { regexes: [REGEX_BUST, REGEX_JOB], add: 10 },
+    { regexes: [/貢ぎます/g], add: 10 },
     { regexes: [/連絡先|画像|動画/g, /交換/g], add: 10 },
     { regexes: [/凍結回避|凍避/g], add: 10 },
     { regexes: [/条件が?合えば|相性を?確かめ/g], add: 10 },
@@ -219,11 +224,11 @@
     { regexes: [/金持ち|セレブ/g], add: 5 },
     { regexes: [/口座/g], add: 5 },
     { regexes: [/レクチャー|お教えします|教えます/g], add: 5 },
-    //{ regexes:[/[❤🩷🧡💛💚💙🩵💜🤎🖤🩶🤍💘💓💔💕💖💗💝💞💟❣😍😘😻🏩💌💒💋♀♂💑💏]/g], add:5}, // todo: 機能してなさそう
+    { regexes: [/[🔞❤🩷🧡💛💚💙🩵💜🤎🖤🩶🤍💘💓💔💕💖💗💝💞💟❣😍😘😻🏩💌💒💋♀♂💑💏💰]/g], add: 5 },
   ].map(rule => {
     rule.regexes = rule.regexes.map(regex => {
       const tmp = regex.toString();
-      return new RegExp(toHiragana(tmp.substring(1, tmp.length - 2)), 'g');
+      return new RegExp(toHiragana(tmp.substring(1, tmp.length - 2)), 'gu');
     });
     return rule;
   });
@@ -313,8 +318,15 @@
           this.highlightSpamKeywords(user);
         }
         else if (!user.followButton) {
-          // フォローボタンが見つからない場合は諦める
-          div.dataset.xshl_known = true;
+          user.retryCount++;
+          if (user.retryCount < 5) {
+            debugLog(`Retrying for info_id=${div.dataset.xshl_info_id} (count=${user.retryCount})`);
+          }
+          else {
+            // 何回かリトライしてもフォローボタンが見つからない場合は諦める
+            debugLog(`Giving up for info_id=${div.dataset.xshl_info_id}`);
+            div.dataset.xshl_known = true;
+          }
         }
       }
     }
@@ -423,7 +435,7 @@
 
           // ルールに定義された全ての正規表現にマッチするか確認する
           rule.regexes.forEach(regex => {
-            const regexMod = new RegExp(regex.source, 'i');
+            const regexMod = new RegExp(regex.source, 'iu');
             const matches = text.match(regexMod);
             if (matches) {
               matches.forEach(m => {
@@ -477,8 +489,15 @@
             child.parentNode.replaceChild(frag, child);
           }
         }
+        else if (child.nodeType == Node.ELEMENT_NODE && child.tagName == 'IMG') {
+          // 画像要素 (emoji)
+          if (child.alt === kwd) {
+            child.style.backgroundColor = KEYWORD_BACKGROUND_COLOR;
+            child.title = `by ${APP_NAME}`;
+          }
+        }
         else {
-          // テキスト要素以外
+          // テキストと emoji 以外
           const childText = child.textContent;
           if (this.normalizeForHitTest(childText).includes(kwd)) {
             if (childText == child.innerHTML) {
@@ -673,9 +692,12 @@
         unitElem.textContent = ` ポスト ${postFreq}`;
 
         if (postsPerDay !== 0) {
-          const alpha = Math.round(100 * Math.max(0, Math.min(1, postsPerDay / 0.3)));
-          button.style.color = '#c0f';
-          button.style.filter = `grayscale(${alpha}%)`;
+          const gray = isDarkMode() ? 255 : 0;
+          const alpha = Math.max(0, Math.min(1, 1 - postsPerDay / 0.3));
+          const colorR = Math.floor(gray * (1 - alpha) + 192 * alpha);
+          const colorG = Math.floor(gray * (1 - alpha) + 0 * alpha);
+          const colorB = Math.floor(gray * (1 - alpha) + 255 * alpha);
+          button.style.color = `rgb(${colorR}, ${colorG}, ${colorB})`;
         }
 
         // イベントを削除して再設定
@@ -696,7 +718,7 @@
     showCreatedDate(user, main) {
       if (isNull(user.created, `Created date for @${user.sn}`)) return;
 
-      const containerSpan = main.querySelector('span[data-testid="UserJoinDate"]');
+      const containerSpan = main.querySelector('a[data-testid="UserJoinDate"]');
       if (isNull(containerSpan, 'Wrapper element of created date')) return;
 
       if (containerSpan.dataset.xshl_known && containerSpan.dataset.xshl_known == user.uid) return;
@@ -815,6 +837,9 @@
 
       /** @type {string} */
       this.name = null;
+
+      /** @type {number} */
+      this.retryCount = 0;
     }
 
     /** 
@@ -1049,6 +1074,7 @@
       1907944148453455000: new Date('2025-04-04').getTime(),
       1917925532819425000: new Date('2025-05-01').getTime(),
       1977657953626071000: new Date('2025-10-13').getTime(),
+      1996971470644563000: new Date('2025-12-06').getTime(),
     }
   ];
 
@@ -1161,6 +1187,29 @@
    */
   function formatNumber(num) {
     return num.toLocaleString('ja-JP');
+  }
+
+  let darkModeFlag = null;
+  function isDarkMode() {
+    if (darkModeFlag === null) {
+      do {
+        // 「ホーム」のボタンが白っぽいならダークモード
+        const homeLink = document.querySelector('a[aria-label="ホーム"]');
+        if (!homeLink) break;
+        const homeText = Array.from(homeLink.querySelectorAll("span")).filter(span => span.textContent === 'ホーム')[0];
+        if (!homeText) break;
+        const style = window.getComputedStyle(homeText);
+        const rgb = style.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (!rgb) break;
+        const r = parseInt(rgb[1]);
+        const g = parseInt(rgb[2]);
+        const b = parseInt(rgb[3]);
+        const luminance = (r + g + b) / 3;
+        darkModeFlag = luminance >= 128;
+      } while (false);
+      debugLog(`Dark mode: ${darkModeFlag}`);
+    }
+    return (darkModeFlag === true);
   }
 
   window.xsphl = new XSpamHighlighter();

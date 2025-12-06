@@ -5,7 +5,7 @@ X の PC 向け Web 版のフォロワー一覧で、こっそりフォローし
 ![カバー画像](./images/cover.png)
 
 > [!WARNING]
-> **強調表示されたアカウントが本当にスパムかどうかはご自身で慎重に判断ください。**
+> **強調表示されたアカウントが本当にスパムかどうかはご自身で慎重に判断してください。**
 > 事前に定義されたキーワードに基づいて強調表示しているだけですので、正確でないことが多々あります。
 > 特に NSFW 系や投資家は誤判定されやすいです。
 
@@ -15,8 +15,11 @@ X の PC 向け Web 版のフォロワー一覧で、こっそりフォローし
     - [Tampermonkey](https://www.tampermonkey.net/) (Chrome/Firefox)
     - [Violentmonkey](https://violentmonkey.github.io/) (Firefox)
     - [Greasemonkey](https://addons.mozilla.org/ja/firefox/addon/greasemonkey/) (Firefox)
+    - [AdGuard](https://adguard.com/ja/welcome.html) (Chrome) ※
 2. Chrome + Tampermonkey の場合は [デベロッパーモードを有効化](https://www.google.com/search?q=Chrome+%E3%83%87%E3%83%99%E3%83%AD%E3%83%83%E3%83%91%E3%83%BC%E3%83%A2%E3%83%BC%E3%83%89+%E6%9C%89%E5%8A%B9%E5%8C%96) します。
 3. [こちらのリンク](https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js) を開き、ユーザースクリプトをインストールします。
+
+※ AdGuard の [エクステンション](https://adguard.com/kb/ja/general/extensions/) として本スクリプトが使用できるとの情報を頂いておりますが、動作確認は行っておりません。
 
 ## 判定基準
 
@@ -37,21 +40,28 @@ X の PC 向け Web 版のフォロワー一覧で、こっそりフォローし
 
 フォローボタンの上の盾(🛡️)のマークをクリックすると、そのユーザを安全なユーザとしてマークできます。マークされたユーザは次回からスパムっぽさの評価から除外されます。
 
-マークはブラウザに保存されます (外部へは送信されません)。
+マークはブラウザに保存されます。
 
 ### アカウントの推定作成日を表示
 
-アカウントの作成日を User ID からざっくり推定してフォローボタンの上に表示します。スパムっぽさの評価には影響しません。
+アカウントの作成日を User ID からざっくり推定してフォローボタンの上に表示します。スパム判定には影響しません。
 
 ### 非公開アカウントの鍵マークを強調表示
 
-スパムっぽさの評価には影響しません。
+スパム判定には影響しません。
+
+### プロフィールにポスト頻度を表示
+
+総ポスト数とアカウント作成日から 1 日あたりのポスト数を算出し、
+極端に少ない場合は強調表示します。
+
+![](./images/ss-profile.png)
 
 ### メディア欄に推定投稿日を表示
 
-![](./images/ss-media-list.png)
-
 画像や動画の投稿日を URL からざっくり推定してサムネイルにオーバーレイ表示します。
+
+![](./images/ss-media-list.png)
 
 ----
 
