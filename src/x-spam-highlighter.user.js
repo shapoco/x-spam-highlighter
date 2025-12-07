@@ -4,9 +4,9 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.4.470
+// @version     1.4.471
 // @author      Shapoco
-// @description フォロワー覧でスパムっぽいアカウントを強調表示します
+// @description フォロワー欄でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
 // @grant       GM.getValue
 // @grant       GM.setValue
