@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.4.491
+// @version     1.4.493
 // @author      Shapoco
 // @description フォロワー欄でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -53,7 +53,7 @@
     //{ regexes:[/あ/g], add:100}, // テスト用
     { regexes: [/お金|現金|\d*万円/g, /配布|配り|配る|配っ[てた]?|プレゼント|分配|給付/g], add: 50 },
     { regexes: [/びんぼ[ーう]|貧乏|貧困|底辺/g, /成り?上が?り/g], add: 50 },
-    { regexes: [/(気にな(る|ってる|っちゃう)|興味[がの]?ある|ちょっと好きな?|[見み]てみたい)(方|かた|人|ひと|[男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん|メンズ)(だけ)?[にを]?/g], add: 50 },
+    { regexes: [/(気にな(る|ってる|っちゃう)|ちょっと好きな?|[見み]てみたい)(方|かた|人|ひと|[男女][性子]|お(兄|に[いぃ]|姉|ね[えぇ])さん|メンズ)(だけ)?[にを]?/g], add: 50 },
     { regexes: [REGEX_SEXUAL_DESIRE, /(強|つよ)め|獣|けもの|異常|宇宙|お[化ば]け|鬼|(馬|うま)(並み?|なみ)/g], add: 50 },
     { regexes: [/通話の?相手を(探|さが)してい?ます/g], add: 50 },
     { regexes: [/秘密の感情/g], add: 50 },
@@ -174,6 +174,10 @@
     { regexes: [/もっとしたい/g], add: 10 },
     { regexes: [/連絡([待ま]って|します|する)/g], add: 10 },
     { regexes: [/フォロバ|フォローバック|相互フォロー/g, /(💯|100)[%％]?|支援/g], add: 5 },
+    { regexes: [/人见知り/g], add: 10 },
+    { regexes: [/会话|话す/g], add: 10 },
+    { regexes: [/闻く/g], add: 10 },
+    { regexes: [/现实/g], add: 10 },
     { regexes: [/自動/g], add: 5 }, // todo: bot の判定をちゃんとやる
     { regexes: [/イイコト/g], add: 5 }, // todo: カタカナだけにヒットさせたい
     { regexes: [/ヤリたい/g], add: 5 }, // todo: カタカナだけにヒットさせたい
