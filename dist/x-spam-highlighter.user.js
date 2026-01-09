@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.4.499
+// @version     1.4.500
 // @author      Shapoco
 // @description フォロワー欄でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -111,6 +111,7 @@
     { regexes: [/重视/g], add: 20 }, // 重視
     { regexes: [/关系/g], add: 20 }, // 関係
     { regexes: [/距离感/g], add: 20 }, // 距離感
+    { regexes: [/离婚/g], add: 20 }, // 離婚
     { regexes: [REGEX_SEXUAL_DESIRE], add: 20 },
     { regexes: [REGEX_MEDIA, /(オナ|えっ?ちな?|丸見え|大人|オトナ)/g], add: 20 },
     { regexes: [REGEX_MEDIA, REGEX_CASTING], add: 10 },
