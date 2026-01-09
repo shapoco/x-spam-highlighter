@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.4.494
+// @version     1.4.495
 // @author      Shapoco
 // @description フォロワー欄でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -175,9 +175,11 @@
     { regexes: [/連絡([待ま]って|します|する)/g], add: 10 },
     { regexes: [/フォロバ|フォローバック|相互フォロー/g, /(💯|100)[%％]?|支援/g], add: 5 },
     { regexes: [/人见知り/g], add: 10 },
-    { regexes: [/会话|话す|话せたら/g], add: 10 },
+    { regexes: [/会话|话(す|せ|多め)/g], add: 10 },
     { regexes: [/闻く/g], add: 10 },
     { regexes: [/现实|実际/g], add: 10 },
+    { regexes: [/一绪/g], add: 10 },
+    { regexes: [/终わり/g], add: 10 },
     { regexes: [/自動/g], add: 5 }, // todo: bot の判定をちゃんとやる
     { regexes: [/イイコト/g], add: 5 }, // todo: カタカナだけにヒットさせたい
     { regexes: [/ヤリたい/g], add: 5 }, // todo: カタカナだけにヒットさせたい
