@@ -4,7 +4,7 @@
 // @updateURL   http://localhost:51480/x-spam-highlighter.user.js
 // @downloadURL http://localhost:51480/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.4.495
+// @version     1.4.496
 // @author      Shapoco
 // @description フォロワー欄でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -99,6 +99,12 @@
     { regexes: [/インサイダー情報/g], add: 20 },
     { regexes: [/顔びみょ/g, /全振り/g], add: 20 },
     { regexes: [/(オナ|おな)指示/g], add: 20 },
+    { regexes: [/人见知り?/g], add: 20 },
+    { regexes: [/会话|话(す|せ|多め)/g], add: 20 },
+    { regexes: [/闻く/g], add: 20 },
+    { regexes: [/现实|実际/g], add: 20 },
+    { regexes: [/一绪/g], add: 20 },
+    { regexes: [/终わり/g], add: 20 },
     { regexes: [REGEX_SEXUAL_DESIRE], add: 20 },
     { regexes: [REGEX_MEDIA, /(オナ|えっ?ちな?|丸見え|大人|オトナ)/g], add: 20 },
     { regexes: [REGEX_MEDIA, REGEX_CASTING], add: 10 },
@@ -174,12 +180,6 @@
     { regexes: [/もっとしたい/g], add: 10 },
     { regexes: [/連絡([待ま]って|します|する)/g], add: 10 },
     { regexes: [/フォロバ|フォローバック|相互フォロー/g, /(💯|100)[%％]?|支援/g], add: 5 },
-    { regexes: [/人见知り/g], add: 10 },
-    { regexes: [/会话|话(す|せ|多め)/g], add: 10 },
-    { regexes: [/闻く/g], add: 10 },
-    { regexes: [/现实|実际/g], add: 10 },
-    { regexes: [/一绪/g], add: 10 },
-    { regexes: [/终わり/g], add: 10 },
     { regexes: [/自動/g], add: 5 }, // todo: bot の判定をちゃんとやる
     { regexes: [/イイコト/g], add: 5 }, // todo: カタカナだけにヒットさせたい
     { regexes: [/ヤリたい/g], add: 5 }, // todo: カタカナだけにヒットさせたい
