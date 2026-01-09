@@ -4,7 +4,7 @@
 // @updateURL   https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @downloadURL https://github.com/shapoco/x-spam-highlighter/raw/refs/heads/main/dist/x-spam-highlighter.user.js
 // @match       https://x.com/*
-// @version     1.4.498
+// @version     1.4.499
 // @author      Shapoco
 // @description フォロワー欄でスパムっぽいアカウントを強調表示します
 // @run-at      document-start
@@ -99,17 +99,18 @@
     { regexes: [/インサイダー情報/g], add: 20 },
     { regexes: [/顔びみょ/g, /全振り/g], add: 20 },
     { regexes: [/(オナ|おな)指示/g], add: 20 },
-    { regexes: [/人见知り?/g], add: 20 },
-    { regexes: [/会话|话(す|せ|多め)/g], add: 20 },
-    { regexes: [/闻く/g], add: 20 },
+    { regexes: [/人见知り?/g], add: 20 }, // 人見知り
+    { regexes: [/会话|话(す|せ|多め)|雑谈/g], add: 20 }, // 会話, 話す, 雑談
+    { regexes: [/闻く/g], add: 20 }, // 聞く
     { regexes: [/现实/g], add: 20 }, // 現実
     { regexes: [/実际/g], add: 20 }, // 実際
-    { regexes: [/一绪/g], add: 20 },
-    { regexes: [/终わり/g], add: 20 },
+    { regexes: [/一绪/g], add: 20 }, // 一緒
+    { regexes: [/终わり/g], add: 20 }, // 終わり
     { regexes: [/逛街/g], add: 20 }, // 街歩き
     { regexes: [/聊天/g], add: 20 }, // チャット
-    { regexes: [/重视/g], add: 20 },
+    { regexes: [/重视/g], add: 20 }, // 重視
     { regexes: [/关系/g], add: 20 }, // 関係
+    { regexes: [/距离感/g], add: 20 }, // 距離感
     { regexes: [REGEX_SEXUAL_DESIRE], add: 20 },
     { regexes: [REGEX_MEDIA, /(オナ|えっ?ちな?|丸見え|大人|オトナ)/g], add: 20 },
     { regexes: [REGEX_MEDIA, REGEX_CASTING], add: 10 },
